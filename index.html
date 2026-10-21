@@ -151,6 +151,28 @@ footer {
   .result { padding: 13px; }
   .result-row { align-items: flex-start; }
 }
+
+/* Perfection Calculator */
+.tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+.tab-button {
+  border:1px solid var(--border); border-radius:6px; padding:10px 13px;
+  background:#090909; color:#c8c8c8; cursor:pointer; font:inherit; font-size:12px;
+}
+.tab-button.active { color:var(--gold-light); border-color:var(--gold); background:#a9873e18; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+.formula {
+  margin-top:16px; padding:14px; border:1px solid #393226; border-radius:8px;
+  background:#0a0a0a; color:#c9c9c9; font-size:12px; line-height:1.75;
+  overflow-wrap:anywhere;
+}
+.formula code { color:var(--gold-light); font-family:Consolas,monospace; }
+.status-card { border:1px solid #292929; border-radius:8px; padding:13px; background:#0a0a0a; }
+.status-card h3 { font-size:13px; margin:0 0 10px; color:var(--gold-light); }
+.status-card .small-result { color:#aaa; font-size:12px; line-height:1.7; }
+.status-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:16px; }
+@media (max-width:480px) { .status-grid { grid-template-columns:1fr; } .tab-button { flex:1 1 auto; } }
+
 </style>
 </head>
 <body>
@@ -231,6 +253,95 @@ footer {
     <p class="note">Material XP = rarity coefficient × level × (level + 4) × quantity.</p>
   </section>
 
+
+  <section class="card" id="perfectionCalculator">
+    <div class="card-heading">
+      <div class="number">03</div>
+      <div>
+        <h2>Perfection Calculator</h2>
+        <div class="card-desc">Check level 1 status values, perfection, and real damage multipliers</div>
+      </div>
+    </div>
+
+    <div class="fields">
+      <div class="field">
+        <label for="perfLevel">Relic Level</label>
+        <input id="perfLevel" type="number" min="1" max="100000" step="1" value="1">
+      </div>
+      <div class="field">
+        <label for="perfDmg">DMG (required)</label>
+        <input id="perfDmg" type="number" min="1" max="100000" step="0.1" value="10" placeholder="e.g. 10">
+      </div>
+      <div class="field">
+        <label for="perfRaid">Raid Damage (optional)</label>
+        <input id="perfRaid" type="number" min="1" max="100000" step="0.1" placeholder="Leave blank if absent">
+      </div>
+      <div class="field">
+        <label for="perfChallenge">Challenge (optional)</label>
+        <input id="perfChallenge" type="number" min="1" max="100000" step="0.1" placeholder="Leave blank if absent">
+      </div>
+      <div class="field">
+        <label for="perfEndless">Endless (optional)</label>
+        <input id="perfEndless" type="number" min="1" max="100000" step="0.1" placeholder="Leave blank if absent">
+      </div>
+    </div>
+
+    <div class="result" aria-live="polite">
+      <div class="result-row">
+        <span class="result-label">General Perfection</span>
+        <span class="value" id="perfScore">10.00 / 10</span>
+      </div>
+      <div class="result-row total">
+        <span class="result-label">Overall Percentage</span>
+        <span class="value" id="perfPercent">100.00%</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Statuses included</span>
+        <span class="value" id="perfCount">1</span>
+      </div>
+    </div>
+
+    <div class="status-grid" id="statusBreakdown" aria-live="polite"></div>
+
+    <h3 style="margin:22px 0 10px;font-size:14px;color:var(--gold-light)">Perfection & Real Damage Multipliers</h3>
+    <div class="tabs" role="tablist" aria-label="Perfection categories">
+      <button class="tab-button active" type="button" data-tab="general">General</button>
+      <button class="tab-button" type="button" data-tab="raid">Raid</button>
+      <button class="tab-button" type="button" data-tab="challenge">Challenge</button>
+      <button class="tab-button" type="button" data-tab="endless">Endless</button>
+    </div>
+    <div class="tab-panel active" id="panel-general">
+      <div class="result-row"><span class="result-label">General perfection</span><span class="value" id="generalTabScore">10.00 / 10</span></div>
+      <p class="note">The general score is the arithmetic mean of the individual status perfection percentages. If all four statuses are entered, the score displays ??? because that combination is not valid.</p>
+    </div>
+    <div class="tab-panel" id="panel-raid">
+      <div class="result-row"><span class="result-label">Raid perfection</span><span class="value" id="raidTabScore">—</span></div>
+      <div class="result-row"><span class="result-label">Real Raid multiplier</span><span class="value" id="raidMultiplier">—</span></div>
+      <p class="note">DMG is applied first, then Raid Damage.</p>
+    </div>
+    <div class="tab-panel" id="panel-challenge">
+      <div class="result-row"><span class="result-label">Challenge perfection</span><span class="value" id="challengeTabScore">—</span></div>
+      <div class="result-row"><span class="result-label">Real Challenge multiplier</span><span class="value" id="challengeMultiplier">—</span></div>
+      <p class="note">DMG is applied first, then Challenge.</p>
+    </div>
+    <div class="tab-panel" id="panel-endless">
+      <div class="result-row"><span class="result-label">Endless perfection</span><span class="value" id="endlessTabScore">—</span></div>
+      <div class="result-row"><span class="result-label">Real Endless multiplier</span><span class="value" id="endlessMultiplier">—</span></div>
+      <p class="note">DMG is applied first, then Endless.</p>
+    </div>
+
+    <div class="formula">
+      <strong style="color:var(--gold-light)">Public formulas (easy to verify)</strong><br>
+      <code>Level 1 status = Current status − (Relic level − 1)</code><br>
+      <code>Status perfection (%) = Level 1 status ÷ Level 1 maximum × 100</code><br>
+      <code>General perfection (%) = Sum of included status percentages ÷ Number of included statuses</code><br>
+      <code>Perfection score = General perfection (%) ÷ 10</code><br>
+      <code>Real multiplier = (1 + DMG ÷ 100) × (1 + mode bonus ÷ 100)</code><br>
+      Level 1 maximums are configured below: DMG 10, Raid 10, Challenge 35, Endless 35. Statuses can use decimal increments of 0.1. DMG is required; the other statuses are optional. Four entered statuses show ??? for general perfection.
+    </div>
+    <p class="note">For maintainers: edit the <code>PERFECTION_CONFIG</code> object in the JavaScript to change status maximums or rules.</p>
+  </section>
+
   <footer>RELICS CALCULATOR · COMMUNITY TOOL</footer>
 </main>
 
@@ -283,13 +394,127 @@ footer {
     $("materialXP").textContent = fmt(total);
   }
 
-  $("level").addEventListener("input", updateLevel);
+
+  // EASY-TO-EDIT SETTINGS: status maxima at Level 1 and which statuses are optional.
+  const PERFECTION_CONFIG = {
+    statuses: {
+      dmg:       { label: "DMG",       maxLevel1: 10, required: true },
+      raid:      { label: "Raid Damage", maxLevel1: 10, required: false },
+      challenge: { label: "Challenge", maxLevel1: 35, required: false },
+      endless:   { label: "Endless",   maxLevel1: 35, required: false }
+    },
+    maxStatusesAllowed: 3, // The game allows at most 3 statuses on one relic.
+    decimalStep: 0.1
+  };
+
+  const perfFmt = n => Number.isFinite(n)
+    ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : "???";
+
+  function readPerfNumber(id, required = false) {
+    const el = $(id);
+    const raw = el.value.trim();
+    if (raw === "") return required ? null : undefined;
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 1) return null;
+    return n;
+  }
+
+  function setPerf(id, value) {
+    $(id).textContent = value;
+  }
+
+  function updatePerfection() {
+    const level = Number($("perfLevel").value);
+    const validLevel = $("perfLevel").value.trim() !== "" &&
+      Number.isInteger(level) && level >= 1 && level <= 100000;
+    const raw = {};
+    for (const key of Object.keys(PERFECTION_CONFIG.statuses)) {
+      raw[key] = readPerfNumber("perf" + key[0].toUpperCase() + key.slice(1),
+        PERFECTION_CONFIG.statuses[key].required);
+    }
+
+    const entered = Object.keys(raw).filter(key => raw[key] !== undefined && raw[key] !== null);
+    const dmgMissing = raw.dmg === null || raw.dmg === undefined;
+    const tooMany = entered.length > PERFECTION_CONFIG.maxStatusesAllowed;
+    const invalid = !validLevel || dmgMissing ||
+      Object.keys(raw).some(key => raw[key] === null);
+
+    const rows = [];
+    const percentages = {};
+    const level1Values = {};
+    for (const [key, config] of Object.entries(PERFECTION_CONFIG.statuses)) {
+      const value = raw[key];
+      if (value === undefined || value === null) continue;
+      const level1 = Math.round((value - (level - 1)) * 10) / 10;
+      level1Values[key] = level1;
+      const pct = level1 >= 1 && level1 <= config.maxLevel1
+        ? (level1 / config.maxLevel1) * 100
+        : null;
+      percentages[key] = pct;
+      rows.push(`<div class="status-card"><h3>${config.label}</h3>
+        <div class="small-result">Entered value: <strong>${perfFmt(value)}</strong><br>
+        Level 1 value: <strong>${perfFmt(level1)}</strong><br>
+        Perfection: <strong>${pct === null ? "???" : perfFmt(pct) + "%"}</strong></div></div>`);
+    }
+    $("statusBreakdown").innerHTML = rows.join("");
+
+    let overall = null;
+    if (!invalid && !tooMany && entered.length >= 2 &&
+        entered.every(key => percentages[key] !== null && percentages[key] !== undefined)) {
+      overall = entered.reduce((sum, key) => sum + percentages[key], 0) / entered.length;
+    }
+    // A relic must have at least two statuses to receive a perfection score.
+    const overallText = invalid || tooMany || entered.length < 2 || overall === null
+      ? "???" : perfFmt(overall / 10) + " / 10";
+    const percentText = invalid || tooMany || entered.length < 2 || overall === null
+      ? "???" : perfFmt(overall) + "%";
+    setPerf("perfScore", overallText);
+    setPerf("perfPercent", percentText);
+    setPerf("perfCount", tooMany ? "???" : String(entered.length));
+    setPerf("generalTabScore", overallText);
+
+    for (const mode of ["raid", "challenge", "endless"]) {
+      const modeValue = raw[mode];
+      const modePct = percentages[mode];
+      const available = !invalid && modeValue !== undefined && modeValue !== null &&
+        modePct !== null && modePct !== undefined;
+      setPerf(mode + "TabScore", available ? perfFmt(modePct / 10) + " / 10 (" + perfFmt(modePct) + "%)" : "—");
+      if (available && raw.dmg !== undefined && raw.dmg !== null) {
+        const multiplier = (1 + raw.dmg / 100) * (1 + modeValue / 100);
+        const bonus = (multiplier - 1) * 100;
+        setPerf(mode + "Multiplier", perfFmt(multiplier) + "×  (+" + perfFmt(bonus) + "%)");
+      } else {
+        setPerf(mode + "Multiplier", "—");
+      }
+    }
+  }
+
+  document.querySelectorAll(".tab-button").forEach(button => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll(".tab-button").forEach(b => b.classList.toggle("active", b === button));
+      document.querySelectorAll(".tab-panel").forEach(panel =>
+        panel.classList.toggle("active", panel.id === "panel-" + button.dataset.tab));
+    });
+  });
+
+  ["perfLevel", "perfDmg", "perfRaid", "perfChallenge", "perfEndless"].forEach(id => {
+    $(id).addEventListener("input", updatePerfection);
+  });
+
+    $("level").addEventListener("input", updateLevel);
   $("matLevel").addEventListener("input", updateMaterial);
   $("quantity").addEventListener("input", updateMaterial);
   $("rarity").addEventListener("change", updateMaterial);
 
   updateLevel();
   updateMaterial();
+  updatePerfection();
+})();
+</script>
+</body>
+</html>
+
 })();
 </script>
 </body>
