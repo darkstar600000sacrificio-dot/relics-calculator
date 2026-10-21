@@ -266,11 +266,11 @@ footer {
     <div class="fields">
       <div class="field">
         <label for="perfLevel">Relic Level</label>
-        <input id="perfLevel" type="number" min="1" max="100000" step="1" value="1">
+        <input id="perfLevel" type="number" min="1" max="100000" step="1" value="">
       </div>
       <div class="field">
         <label for="perfDmg">DMG (required)</label>
-        <input id="perfDmg" type="number" min="1" max="100000" step="0.1" value="10" placeholder="e.g. 10">
+        <input id="perfDmg" type="number" min="1" max="100000" step="0.1" value="">
       </div>
       <div class="field">
         <label for="perfRaid">Raid Damage (optional)</label>
@@ -289,15 +289,15 @@ footer {
     <div class="result" aria-live="polite">
       <div class="result-row">
         <span class="result-label">General Perfection</span>
-        <span class="value" id="perfScore">10.00 / 10</span>
+        <span class="value" id="perfScore">—</span>
       </div>
       <div class="result-row total">
         <span class="result-label">Overall Percentage</span>
-        <span class="value" id="perfPercent">100.00%</span>
+        <span class="value" id="perfPercent">—</span>
       </div>
       <div class="result-row">
         <span class="result-label">Statuses included</span>
-        <span class="value" id="perfCount">1</span>
+        <span class="value" id="perfCount">—</span>
       </div>
     </div>
 
@@ -311,7 +311,7 @@ footer {
       <button class="tab-button" type="button" data-tab="endless">Endless</button>
     </div>
     <div class="tab-panel active" id="panel-general">
-      <div class="result-row"><span class="result-label">General perfection</span><span class="value" id="generalTabScore">10.00 / 10</span></div>
+      <div class="result-row"><span class="result-label">General perfection</span><span class="value" id="generalTabScore">—</span></div>
       <p class="note">The general score is the arithmetic mean of the individual status perfection percentages. If all four statuses are entered, the score displays ??? because that combination is not valid.</p>
     </div>
     <div class="tab-panel" id="panel-raid">
@@ -338,6 +338,40 @@ footer {
       <code>Perfection score = General perfection (%) ÷ 10</code><br>
       <code>Real multiplier = (1 + DMG ÷ 100) × (1 + mode bonus ÷ 100)</code><br>
       Level 1 maximums are configured below: DMG 10, Raid 10, Challenge 35, Endless 35. Statuses can use decimal increments of 0.1. DMG is required; the other statuses are optional. Four entered statuses show ??? for general perfection.
+    </div>
+    <h3 style="margin:26px 0 10px;font-size:14px;color:var(--gold-light)">Higher-Level Status Simulator</h3>
+    <p class="note" style="margin-top:0">Preview how your current relic's statuses would look at a higher level. Every level gained adds +1 to each existing status.</p>
+    <div class="fields" style="margin-top:16px">
+      <div class="field">
+        <label for="simTargetLevel">Target Level</label>
+        <input id="simTargetLevel" type="number" min="1" max="100000" step="1" value="">
+      </div>
+      <div class="field">
+        <label>Levels gained</label>
+        <input id="simLevelsGained" type="text" value="" readonly>
+      </div>
+    </div>
+    <div class="result" aria-live="polite">
+      <div class="result-row"><span class="result-label">Simulation</span><span class="value" id="simLevelSummary">—</span></div>
+      <div id="simStatusRows"></div>
+    </div>
+    <div class="result" aria-live="polite" style="margin-top:14px">
+      <div class="result-row total"><span class="result-label">Final Status Bonuses</span><span class="value" style="font-size:15px">Simulated values</span></div>
+      <div id="simFinalBonusRows"></div>
+    </div>
+    <div class="result" aria-live="polite" style="margin-top:14px">
+      <div class="result-row total"><span class="result-label">Final Multipliers</span><span class="value" style="font-size:15px">Combined effects</span></div>
+      <div id="simFinalMultiplierRows"></div>
+    </div>
+    <div class="formula">
+      <strong style="color:var(--gold-light)">Simulator formulas</strong><br>
+      <code>Levels gained = Target level − Current relic level</code><br>
+      <code>Simulated status = Current status + Levels gained</code><br>
+      <code>Final status bonus = Simulated status value</code><br>
+      <code>DMG multiplier = 1 + Simulated DMG ÷ 100</code><br>
+      <code>Mode multiplier = (1 + Simulated DMG ÷ 100) × (1 + Simulated mode status ÷ 100)</code><br>
+      <code>Combined bonus (%) = (Final multiplier − 1) × 100</code><br>
+      Only statuses present on the relic are simulated. A mode multiplier appears only when both DMG and that mode's status are entered. Target level must be equal to or higher than the current level.
     </div>
     <p class="note">For maintainers: edit the <code>PERFECTION_CONFIG</code> object in the JavaScript to change status maximums or rules.</p>
   </section>
@@ -490,6 +524,55 @@ footer {
     }
   }
 
+  function updateStatusSimulator() {
+    const currentLevel = Number($("perfLevel").value);
+    const targetLevel = Number($("simTargetLevel").value);
+    const currentLevelValid = $("perfLevel").value.trim() !== "" && Number.isInteger(currentLevel) && currentLevel >= 1 && currentLevel <= 100000;
+    const targetValid = $("simTargetLevel").value.trim() !== "" && Number.isInteger(targetLevel) && targetLevel >= 1 && targetLevel <= 100000;
+    if (!currentLevelValid || !targetValid || targetLevel < currentLevel) {
+      $("simLevelsGained").value = "";
+      const bothBlank = $("perfLevel").value.trim() === "" && $("simTargetLevel").value.trim() === "";
+      $("simLevelSummary").textContent = bothBlank ? "—" : "Enter valid levels (target ≥ current level)";
+      $("simStatusRows").innerHTML = "";
+      $("simFinalBonusRows").innerHTML = "";
+      $("simFinalMultiplierRows").innerHTML = "";
+      return;
+    }
+
+    const gained = targetLevel - currentLevel;
+    $("simLevelsGained").value = "+" + gained + (gained === 1 ? " level" : " levels");
+    $("simLevelSummary").textContent = "Level " + currentLevel + " → Level " + targetLevel + " ( +" + gained + " )";
+    const statuses = [["dmg", "DMG"], ["raid", "Raid Damage"], ["challenge", "Challenge"], ["endless", "Endless"]];
+    const simulated = {};
+    const rows = [];
+    const bonusRows = [];
+    for (const [key, label] of statuses) {
+      const raw = $("perf" + key[0].toUpperCase() + key.slice(1)).value.trim();
+      if (raw === "") continue;
+      const currentValue = Number(raw);
+      if (!Number.isFinite(currentValue) || currentValue < 1) continue;
+      const nextValue = Math.round((currentValue + gained) * 10) / 10;
+      simulated[key] = nextValue;
+      rows.push(`<div class="result-row"><span class="result-label">${label}</span><span class="value">${perfFmt(currentValue)} original + ${gained} = ${perfFmt(nextValue)}%</span></div>`);
+      bonusRows.push(`<div class="result-row"><span class="result-label">${label} bonus</span><span class="value">+${perfFmt(nextValue)}%</span></div>`);
+    }
+    $("simStatusRows").innerHTML = rows.length ? rows.join("") : '<p class="note">Enter your relic statuses above to simulate them.</p>';
+    $("simFinalBonusRows").innerHTML = bonusRows.length ? bonusRows.join("") : '<p class="note">Enter your relic statuses above to see final bonuses.</p>';
+
+    const multiplierRows = [];
+    if (simulated.dmg !== undefined) {
+      const dmgMultiplier = 1 + simulated.dmg / 100;
+      multiplierRows.push(`<div class="result-row"><span class="result-label">DMG multiplier</span><span class="value">${perfFmt(dmgMultiplier)}× (+${perfFmt(simulated.dmg)}%)</span></div>`);
+      for (const [key, label] of [["raid", "Raid Damage"], ["challenge", "Challenge"], ["endless", "Endless"]]) {
+        if (simulated[key] === undefined) continue;
+        const multiplier = dmgMultiplier * (1 + simulated[key] / 100);
+        const combinedBonus = (multiplier - 1) * 100;
+        multiplierRows.push(`<div class="result-row"><span class="result-label">${label} multiplier</span><span class="value">${perfFmt(multiplier)}× (+${perfFmt(combinedBonus)}%)</span></div>`);
+      }
+    }
+    $("simFinalMultiplierRows").innerHTML = multiplierRows.length ? multiplierRows.join("") : '<p class="note">Enter DMG to calculate final multipliers.</p>';
+  }
+
   document.querySelectorAll(".tab-button").forEach(button => {
     button.addEventListener("click", () => {
       document.querySelectorAll(".tab-button").forEach(b => b.classList.toggle("active", b === button));
@@ -499,8 +582,12 @@ footer {
   });
 
   ["perfLevel", "perfDmg", "perfRaid", "perfChallenge", "perfEndless"].forEach(id => {
-    $(id).addEventListener("input", updatePerfection);
+    $(id).addEventListener("input", () => {
+      updatePerfection();
+      updateStatusSimulator();
+    });
   });
+  $("simTargetLevel").addEventListener("input", updateStatusSimulator);
 
     $("level").addEventListener("input", updateLevel);
   $("matLevel").addEventListener("input", updateMaterial);
@@ -510,11 +597,7 @@ footer {
   updateLevel();
   updateMaterial();
   updatePerfection();
-})();
-</script>
-</body>
-</html>
-
+  updateStatusSimulator();
 })();
 </script>
 </body>
