@@ -174,6 +174,17 @@ footer {
 .status-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:16px; }
 @media (max-width:480px) { .status-grid { grid-template-columns:1fr; } .tab-button { flex:1 1 auto; } }
 
+
+.mode-tabs { margin: 4px 0 22px; }
+.mode-panel[hidden] { display:none; }
+.mode-heading { color:var(--gold-light); font-size:14px; margin:18px 0 12px; }
+.evaluation { margin-top:16px; padding:15px; border:1px solid #393939; border-radius:8px; background:#090909; color:#aaa; font-size:13px; line-height:1.6; font-weight:700; }
+.evaluation.invalid { border-color:#7b2424; color:#ff7777; background:#240b0b; }
+.evaluation.tier-gold { color:#f3d47b; border:1px solid #80621d; background:linear-gradient(135deg,#33270b,#171105); }
+.evaluation.tier-darkgreen { color:#8fc99a; border:1px solid #285b35; background:#0b2112; }
+.evaluation.tier-green { color:#6fe08a; border:1px solid #26743b; background:#0b2914; }
+.evaluation.tier-orange { color:#ffb35c; border:1px solid #92531d; background:#2a1708; }
+.evaluation.tier-red { color:#ff7777; border:1px solid #812929; background:#290b0b; }
 </style>
 </head>
 <body>
@@ -260,121 +271,113 @@ footer {
       <div class="number">03</div>
       <div>
         <h2>Perfection Calculator</h2>
-        <div class="card-desc">Check level 1 status values, perfection, and real damage multipliers</div>
+        <div class="card-desc">Evaluate DMG and HP relics separately, including real multipliers</div>
       </div>
     </div>
 
-    <div class="fields">
-      <div class="field">
-        <label for="perfLevel">Relic Level</label>
-        <input id="perfLevel" type="number" min="1" max="100000" step="1" value="">
+    <div class="tabs mode-tabs" role="tablist" aria-label="Relic type">
+      <button class="tab-button active" type="button" data-mode="dmg">DMG Relic</button>
+      <button class="tab-button" type="button" data-mode="hp">HP Relic</button>
+    </div>
+
+    <div id="dmgMode" class="mode-panel">
+      <h3 class="mode-heading">DMG Relic</h3>
+      <div class="fields">
+        <div class="field"><label for="dmgLevel">Relic Level</label><input id="dmgLevel" type="number" min="1" max="100000" step="1"></div>
+        <div class="field"><label for="dmgBase">DMG (required)</label><input id="dmgBase" type="number" min="1" max="100000" step="0.1"></div>
+        <div class="field"><label for="dmgRaid">Raid Damage</label><input id="dmgRaid" type="number" min="1" max="100000" step="0.1" placeholder="Leave blank if absent"></div>
+        <div class="field"><label for="dmgEndless">Endless Damage</label><input id="dmgEndless" type="number" min="1" max="100000" step="0.1" placeholder="Leave blank if absent"></div>
+        <div class="field"><label for="dmgChallenge">Challenge Damage</label><input id="dmgChallenge" type="number" min="1" max="100000" step="0.1" placeholder="Leave blank if absent"></div>
       </div>
-      <div class="field">
-        <label for="perfDmg">DMG (required)</label>
-        <input id="perfDmg" type="number" min="1" max="100000" step="0.1" value="">
+      <p class="note">A DMG relic needs DMG plus at least 1 other status. You can have 2 or 3 statuses total; all four together are invalid.</p>
+      <div class="result">
+        <div class="result-row"><span class="result-label">Overall Perfection</span><span class="value" id="dmgScore">—</span></div>
+        <div class="result-row total"><span class="result-label">Overall Percentage</span><span class="value" id="dmgPercent">—</span></div>
+        <div class="result-row"><span class="result-label">Valid statuses</span><span class="value" id="dmgCount">—</span></div>
       </div>
-      <div class="field">
-        <label for="perfRaid">Raid Damage (optional)</label>
-        <input id="perfRaid" type="number" min="1" max="100000" step="0.1" placeholder="Leave blank if absent">
+      <div class="status-grid" id="dmgBreakdown"></div>
+      <div class="evaluation" id="dmgEvaluation" aria-live="polite">Enter a level, DMG, and at least 1 additional status to evaluate this relic.</div>
+      <h3 class="mode-heading">Perfection by Mode & Real Damage Multipliers</h3>
+      <div class="tabs" role="tablist" aria-label="DMG mode perfection">
+        <button class="tab-button active" type="button" data-panel="dmgRaidPanel">Raid</button>
+        <button class="tab-button" type="button" data-panel="dmgEndlessPanel">Endless</button>
+        <button class="tab-button" type="button" data-panel="dmgChallengePanel">Challenge</button>
       </div>
-      <div class="field">
-        <label for="perfChallenge">Challenge (optional)</label>
-        <input id="perfChallenge" type="number" min="1" max="100000" step="0.1" placeholder="Leave blank if absent">
+      <div class="tab-panel active" id="dmgRaidPanel">
+        <div class="result-row"><span class="result-label">DMG + Raid perfection</span><span class="value" id="dmgRaidScore">—</span></div>
+        <div class="result-row"><span class="result-label">Real Raid multiplier</span><span class="value" id="dmgRaidMultiplier">—</span></div>
+        <p class="note">The mode score is the average of the DMG and Raid Damage perfection percentages. The real multiplier uses the entered current values.</p>
       </div>
-      <div class="field">
-        <label for="perfEndless">Endless (optional)</label>
-        <input id="perfEndless" type="number" min="1" max="100000" step="0.1" placeholder="Leave blank if absent">
+      <div class="tab-panel" id="dmgEndlessPanel">
+        <div class="result-row"><span class="result-label">DMG + Endless perfection</span><span class="value" id="dmgEndlessScore">—</span></div>
+        <div class="result-row"><span class="result-label">Real Endless multiplier</span><span class="value" id="dmgEndlessMultiplier">—</span></div>
+        <p class="note">The mode score is the average of the DMG and Endless Damage perfection percentages. The real multiplier uses the entered current values.</p>
+      </div>
+      <div class="tab-panel" id="dmgChallengePanel">
+        <div class="result-row"><span class="result-label">DMG + Challenge perfection</span><span class="value" id="dmgChallengeScore">—</span></div>
+        <div class="result-row"><span class="result-label">Real Challenge multiplier</span><span class="value" id="dmgChallengeMultiplier">—</span></div>
+        <p class="note">The mode score is the average of the DMG and Challenge Damage perfection percentages. The real multiplier uses the entered current values.</p>
       </div>
     </div>
 
-    <div class="result" aria-live="polite">
-      <div class="result-row">
-        <span class="result-label">General Perfection</span>
-        <span class="value" id="perfScore">—</span>
+    <div id="hpMode" class="mode-panel" hidden>
+      <h3 class="mode-heading">HP Relic</h3>
+      <div class="fields">
+        <div class="field"><label for="hpLevel">Relic Level</label><input id="hpLevel" type="number" min="1" max="100000" step="1"></div>
+        <div class="field"><label for="hpBase">HP (required)</label><input id="hpBase" type="number" min="1" max="100000" step="0.1"></div>
+        <div class="field"><label for="hpEndless">Endless HP (required)</label><input id="hpEndless" type="number" min="1" max="100000" step="0.1"></div>
+        <div class="field"><label for="hpDefense">Endless DEF (required)</label><input id="hpDefense" type="number" min="1" max="100000" step="0.1"></div>
+        <div class="field"><label for="hpChallengeDefense">Challenge DEF (invalid)</label><input id="hpChallengeDefense" type="number" min="1" max="100000" step="0.1" placeholder="Must be absent"></div>
       </div>
-      <div class="result-row total">
-        <span class="result-label">Overall Percentage</span>
-        <span class="value" id="perfPercent">—</span>
+      <p class="note">An HP relic must have exactly these 3 useful statuses: HP, Endless HP, and Endless DEF. Challenge DEF does not work and invalidates the relic's perfect-status combination.</p>
+      <div class="result">
+        <div class="result-row"><span class="result-label">Overall Perfection</span><span class="value" id="hpScore">—</span></div>
+        <div class="result-row total"><span class="result-label">Overall Percentage</span><span class="value" id="hpPercent">—</span></div>
+        <div class="result-row"><span class="result-label">Valid statuses</span><span class="value" id="hpCount">—</span></div>
       </div>
-      <div class="result-row">
-        <span class="result-label">Statuses included</span>
-        <span class="value" id="perfCount">—</span>
+      <div class="status-grid" id="hpBreakdown"></div>
+      <div class="evaluation" id="hpEvaluation" aria-live="polite">Enter a level and all 3 useful HP relic statuses to evaluate this relic.</div>
+      <h3 class="mode-heading">Perfection by Stat & Real Health Multipliers</h3>
+      <div class="tabs" role="tablist" aria-label="HP mode perfection">
+        <button class="tab-button active" type="button" data-panel="hpEndlessPanel">Endless HP</button>
+        <button class="tab-button" type="button" data-panel="hpDefensePanel">Endless DEF</button>
+      </div>
+      <div class="tab-panel active" id="hpEndlessPanel">
+        <div class="result-row"><span class="result-label">HP + Endless HP perfection</span><span class="value" id="hpEndlessScore">—</span></div>
+        <div class="result-row"><span class="result-label">Final Endless HP</span><span class="value" id="hpFinalHealth">—</span></div>
+        <div class="result-row"><span class="result-label">Real HP multiplier</span><span class="value" id="hpHealthMultiplier">—</span></div>
+        <p class="note">Final HP = Base HP × (1 + HP ÷ 100) × (1 + Endless HP ÷ 100). Enter your character's unmodified Base HP below.</p>
+        <div class="field"><label for="baseHealth">Character Base HP</label><input id="baseHealth" type="number" min="1" step="1" placeholder="Enter base HP"></div>
+      </div>
+      <div class="tab-panel" id="hpDefensePanel">
+        <div class="result-row"><span class="result-label">HP + Endless DEF perfection</span><span class="value" id="hpDefenseScore">—</span></div>
+        <div class="result-row"><span class="result-label">Endless DEF multiplier</span><span class="value" id="hpDefenseMultiplier">—</span></div>
+        <p class="note">Endless DEF is shown as its own defensive bonus; it is not multiplied into maximum HP.</p>
       </div>
     </div>
 
-    <div class="status-grid" id="statusBreakdown" aria-live="polite"></div>
-
-    <h3 style="margin:22px 0 10px;font-size:14px;color:var(--gold-light)">Perfection & Real Damage Multipliers</h3>
-    <div class="tabs" role="tablist" aria-label="Perfection categories">
-      <button class="tab-button active" type="button" data-tab="general">General</button>
-      <button class="tab-button" type="button" data-tab="raid">Raid</button>
-      <button class="tab-button" type="button" data-tab="challenge">Challenge</button>
-      <button class="tab-button" type="button" data-tab="endless">Endless</button>
-    </div>
-    <div class="tab-panel active" id="panel-general">
-      <div class="result-row"><span class="result-label">General perfection</span><span class="value" id="generalTabScore">—</span></div>
-      <p class="note">The general score is the arithmetic mean of the individual status perfection percentages. If all four statuses are entered, the score displays ??? because that combination is not valid.</p>
-    </div>
-    <div class="tab-panel" id="panel-raid">
-      <div class="result-row"><span class="result-label">Raid perfection</span><span class="value" id="raidTabScore">—</span></div>
-      <div class="result-row"><span class="result-label">Real Raid multiplier</span><span class="value" id="raidMultiplier">—</span></div>
-      <p class="note">DMG is applied first, then Raid Damage.</p>
-    </div>
-    <div class="tab-panel" id="panel-challenge">
-      <div class="result-row"><span class="result-label">Challenge perfection</span><span class="value" id="challengeTabScore">—</span></div>
-      <div class="result-row"><span class="result-label">Real Challenge multiplier</span><span class="value" id="challengeMultiplier">—</span></div>
-      <p class="note">DMG is applied first, then Challenge.</p>
-    </div>
-    <div class="tab-panel" id="panel-endless">
-      <div class="result-row"><span class="result-label">Endless perfection</span><span class="value" id="endlessTabScore">—</span></div>
-      <div class="result-row"><span class="result-label">Real Endless multiplier</span><span class="value" id="endlessMultiplier">—</span></div>
-      <p class="note">DMG is applied first, then Endless.</p>
-    </div>
-
-    <div class="formula">
-      <strong style="color:var(--gold-light)">Public formulas (easy to verify)</strong><br>
-      <code>Level 1 status = Current status − (Relic level − 1)</code><br>
-      <code>Status perfection (%) = Level 1 status ÷ Level 1 maximum × 100</code><br>
-      <code>General perfection (%) = Sum of included status percentages ÷ Number of included statuses</code><br>
-      <code>Perfection score = General perfection (%) ÷ 10</code><br>
-      <code>Real multiplier = (1 + DMG ÷ 100) × (1 + mode bonus ÷ 100)</code><br>
-      Level 1 maximums are configured below: DMG 10, Raid 10, Challenge 35, Endless 35. Statuses can use decimal increments of 0.1. DMG is required; the other statuses are optional. Four entered statuses show ??? for general perfection.
-    </div>
-    <h3 style="margin:26px 0 10px;font-size:14px;color:var(--gold-light)">Higher-Level Status Simulator</h3>
-    <p class="note" style="margin-top:0">Preview how your current relic's statuses would look at a higher level. Every level gained adds +1 to each existing status.</p>
+    <h3 class="mode-heading">Higher-Level Status Simulator</h3>
+    <p class="note" style="margin-top:0">Preview the selected relic at a higher level. Every level gained adds +1 to each status already present.</p>
     <div class="fields" style="margin-top:16px">
-      <div class="field">
-        <label for="simTargetLevel">Target Level</label>
-        <input id="simTargetLevel" type="number" min="1" max="100000" step="1" value="">
-      </div>
-      <div class="field">
-        <label>Levels gained</label>
-        <input id="simLevelsGained" type="text" value="" readonly>
-      </div>
+      <div class="field"><label for="simTargetLevel">Target Level</label><input id="simTargetLevel" type="number" min="1" max="100000" step="1"></div>
+      <div class="field"><label for="simLevelsGained">Levels gained</label><input id="simLevelsGained" type="text" readonly></div>
     </div>
     <div class="result" aria-live="polite">
       <div class="result-row"><span class="result-label">Simulation</span><span class="value" id="simLevelSummary">—</span></div>
       <div id="simStatusRows"></div>
+      <div class="result-row total"><span class="result-label" id="simFinalLabel">Final Endless multiplier</span><span class="value" id="simFinalValue">—</span></div>
     </div>
-    <div class="result" aria-live="polite" style="margin-top:14px">
-      <div class="result-row total"><span class="result-label">Final Status Bonuses</span><span class="value" style="font-size:15px">Simulated values</span></div>
-      <div id="simFinalBonusRows"></div>
-    </div>
-    <div class="result" aria-live="polite" style="margin-top:14px">
-      <div class="result-row total"><span class="result-label">Final Multipliers</span><span class="value" style="font-size:15px">Combined effects</span></div>
-      <div id="simFinalMultiplierRows"></div>
-    </div>
+
     <div class="formula">
-      <strong style="color:var(--gold-light)">Simulator formulas</strong><br>
-      <code>Levels gained = Target level − Current relic level</code><br>
-      <code>Simulated status = Current status + Levels gained</code><br>
-      <code>Final status bonus = Simulated status value</code><br>
-      <code>DMG multiplier = 1 + Simulated DMG ÷ 100</code><br>
-      <code>Mode multiplier = (1 + Simulated DMG ÷ 100) × (1 + Simulated mode status ÷ 100)</code><br>
-      <code>Combined bonus (%) = (Final multiplier − 1) × 100</code><br>
-      Only statuses present on the relic are simulated. A mode multiplier appears only when both DMG and that mode's status are entered. Target level must be equal to or higher than the current level.
+      <strong style="color:var(--gold-light)">Perfection formulas</strong><br>
+      <code>Level 1 status = Current status − (Relic level − 1)</code><br>
+      <code>Status perfection (%) = Level 1 status ÷ Level 1 maximum × 100</code><br>
+      <code>Overall perfection = Average of the 2 or 3 entered status perfection values (DMG + at least 1 other status)</code><br>
+      <code>Mode perfection = Average of Base stat perfection + selected mode stat perfection</code><br>
+      <code>Real DMG multiplier = (1 + DMG ÷ 100) × (1 + mode DMG ÷ 100)</code><br>
+      <code>Final HP = Base HP × (1 + HP ÷ 100) × (1 + Endless HP ÷ 100)</code><br>
+      Level 1 maximums: DMG 10, Raid 10, Challenge Damage 35, Endless Damage 35; HP 10, Endless HP 15, Endless DEF 10. Challenge DEF has a listed maximum of 5 but is not a working HP relic status.
     </div>
-    <p class="note">For maintainers: edit the <code>PERFECTION_CONFIG</code> object in the JavaScript to change status maximums or rules.</p>
   </section>
 
   <footer>RELICS CALCULATOR · COMMUNITY TOOL</footer>
@@ -383,222 +386,224 @@ footer {
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const fmt = n => Number.isFinite(n)
-    ? Math.round(n).toLocaleString("en-US")
-    : "Invalid value";
+  const fmt = n => Number.isFinite(n) ? Math.round(n).toLocaleString("en-US") : "—";
+  const perfFmt = n => Number.isFinite(n) ? n.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2}) : "—";
 
   function validInt(id, min, max) {
-    const el = $(id);
-    const n = Number(el.value);
-    const ok = el.value.trim() !== "" &&
-      Number.isSafeInteger(n) && n >= min && n <= max;
+    const el = $(id), n = Number(el.value);
+    const ok = el.value.trim() !== "" && Number.isSafeInteger(n) && n >= min && n <= max;
     el.setAttribute("aria-invalid", String(!ok));
     return ok ? n : null;
   }
-
   function updateLevel() {
     const level = validInt("level", 1, 1000000);
-    if (level === null) {
-      $("nextXP").textContent = "—";
-      $("totalXP").textContent = "—";
-      return;
-    }
-
-    const next = 75 * level * (level + 1);
-    const total = 25 * (level - 1) * level * (level + 1);
-
-    $("nextXP").textContent = fmt(next);
-    $("totalXP").textContent = fmt(total);
+    if (level === null) { $("nextXP").textContent = "—"; $("totalXP").textContent = "—"; return; }
+    $("nextXP").textContent = fmt(75 * level * (level + 1));
+    $("totalXP").textContent = fmt(25 * (level - 1) * level * (level + 1));
   }
-
   function updateMaterial() {
-    const level = validInt("matLevel", 1, 1000000);
-    const quantity = validInt("quantity", 1, 1000000);
-
-    if (level === null || quantity === null) {
-      $("perXP").textContent = "—";
-      $("materialXP").textContent = "—";
-      return;
-    }
-
-    const coefficient = Number($("rarity").value);
-    const per = coefficient * level * (level + 4);
-    const total = per * quantity;
-
-    $("perXP").textContent = fmt(per);
-    $("materialXP").textContent = fmt(total);
+    const level = validInt("matLevel", 1, 1000000), quantity = validInt("quantity", 1, 1000000);
+    if (level === null || quantity === null) { $("perXP").textContent = "—"; $("materialXP").textContent = "—"; return; }
+    const per = Number($("rarity").value) * level * (level + 4);
+    $("perXP").textContent = fmt(per); $("materialXP").textContent = fmt(per * quantity);
   }
 
-
-  // EASY-TO-EDIT SETTINGS: status maxima at Level 1 and which statuses are optional.
-  const PERFECTION_CONFIG = {
-    statuses: {
-      dmg:       { label: "DMG",       maxLevel1: 10, required: true },
-      raid:      { label: "Raid Damage", maxLevel1: 10, required: false },
-      challenge: { label: "Challenge", maxLevel1: 35, required: false },
-      endless:   { label: "Endless",   maxLevel1: 35, required: false }
+  const CONFIG = {
+    dmg: {
+      level:"dmgLevel", base:"dmgBase", baseKey:"dmg", baseLabel:"DMG", baseMax:10,
+      stats:[
+        {key:"raid",id:"dmgRaid",label:"Raid Damage",max:10},
+        {key:"endless",id:"dmgEndless",label:"Endless Damage",max:35},
+        {key:"challenge",id:"dmgChallenge",label:"Challenge Damage",max:35}
+      ],
+      required:2
     },
-    maxStatusesAllowed: 3, // The game allows at most 3 statuses on one relic.
-    decimalStep: 0.1
+    hp: {
+      level:"hpLevel", base:"hpBase", baseKey:"hp", baseLabel:"HP", baseMax:10,
+      stats:[
+        {key:"endless",id:"hpEndless",label:"Endless HP",max:15},
+        {key:"defense",id:"hpDefense",label:"Endless DEF",max:10}
+      ],
+      required:3
+    }
   };
 
-  const perfFmt = n => Number.isFinite(n)
-    ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : "???";
-
-  function readPerfNumber(id, required = false) {
-    const el = $(id);
-    const raw = el.value.trim();
-    if (raw === "") return required ? null : undefined;
+  function readNumber(id) {
+    const raw = $(id).value.trim();
+    if (raw === "") return undefined;
     const n = Number(raw);
-    if (!Number.isFinite(n) || n < 1) return null;
-    return n;
+    return Number.isFinite(n) && n >= 1 ? n : null;
   }
-
-  function setPerf(id, value) {
-    $(id).textContent = value;
+  function statusPercent(value, level, max) {
+    if (value === undefined || value === null || !Number.isInteger(level) || level < 1) return null;
+    const level1 = Math.round((value - (level - 1)) * 10) / 10;
+    if (level1 < 1 || level1 > max) return null;
+    return {level1, percent: level1 / max * 100};
   }
-
-  function updatePerfection() {
-    const level = Number($("perfLevel").value);
-    const validLevel = $("perfLevel").value.trim() !== "" &&
-      Number.isInteger(level) && level >= 1 && level <= 100000;
-    const raw = {};
-    for (const key of Object.keys(PERFECTION_CONFIG.statuses)) {
-      raw[key] = readPerfNumber("perf" + key[0].toUpperCase() + key.slice(1),
-        PERFECTION_CONFIG.statuses[key].required);
+  function scoreText(pct) { return pct === null ? "—" : `${perfFmt(pct/10)} / 10 (${perfFmt(pct)}%)`; }
+  function evaluateMessage(score, invalid) {
+    if (invalid) return {text:"Invalid relic setup — check the required statuses and remove invalid attributes.", cls:"evaluation invalid"};
+    if (score === null) return {text:"Enter a valid level and all required statuses to evaluate this relic.", cls:"evaluation"};
+    if (Math.abs(score - 100) < 0.000001) return {text:"ABSOLUTELY PERFECT — 10/10. Every required status is at its maximum value.", cls:"evaluation tier-gold"};
+    if (score >= 90) return {text:"Excellent relic — 9.0 to 9.9/10. Almost perfect.", cls:"evaluation tier-darkgreen"};
+    if (score >= 75) return {text:"Very good relic — 7.5 to 8.9/10.", cls:"evaluation tier-green"};
+    if (score >= 50) return {text:"Decent relic — 5.0 to 7.4/10. There is room for improvement.", cls:"evaluation tier-orange"};
+    return {text:"Weak relic — below 5.0/10. Consider looking for a better one.", cls:"evaluation tier-red"};
+  }
+  function setEvaluation(id, score, invalid) {
+    const result = evaluateMessage(score, invalid);
+    $(id).className = result.cls;
+    $(id).textContent = result.text;
+  }
+  function pairScore(a,b) {
+    return a && b ? (a.percent + b.percent) / 2 : null;
+  }
+  function multiplier(a,b) {
+    return a !== undefined && b !== undefined ? (1 + a/100) * (1 + b/100) : null;
+  }
+  function updateDMG() {
+    const levelRaw = $("dmgLevel").value.trim(), level = Number(levelRaw);
+    const levelOK = levelRaw !== "" && Number.isInteger(level) && level >= 1 && level <= 100000;
+    const base = readNumber("dmgBase");
+    const values = {dmg:base};
+    for (const stat of CONFIG.dmg.stats) values[stat.key] = readNumber(stat.id);
+    const entered = Object.values(values).filter(v => v !== undefined && v !== null).length;
+    const malformed = Object.values(values).some(v => v === null);
+    const validCount = entered >= 2 && entered <= 3 && !malformed && values.dmg !== undefined;
+    const tooMany = entered > 3;
+    const statusResults = {};
+    const cards = [];
+    const baseResult = levelOK ? statusPercent(base,level,10) : null;
+    if (baseResult) statusResults.dmg = baseResult;
+    if (base !== undefined && base !== null) cards.push(statusCard("DMG",base,baseResult));
+    for (const stat of CONFIG.dmg.stats) {
+      const value = values[stat.key];
+      const result = levelOK ? statusPercent(value,level,stat.max) : null;
+      if (result) statusResults[stat.key] = result;
+      if (value !== undefined && value !== null) cards.push(statusCard(stat.label,value,result));
     }
+    $("dmgBreakdown").innerHTML = cards.join("");
+    const allRequiredValid = levelOK && validCount && !!baseResult && Object.keys(statusResults).length === entered &&
+      Object.values(statusResults).every(x => x && x.percent !== null);
+    const overall = allRequiredValid ? Object.values(statusResults).reduce((a,b)=>a+b.percent,0)/entered : null;
+    const invalid = malformed || tooMany || (levelOK && entered >= 2 && !allRequiredValid);
+    $("dmgScore").textContent = allRequiredValid ? `${perfFmt(overall/10)} / 10` : "—";
+    $("dmgPercent").textContent = allRequiredValid ? `${perfFmt(overall)}%` : "—";
+    $("dmgCount").textContent = tooMany ? "Invalid (4/3)" : `${entered}/3`;
+    setEvaluation("dmgEvaluation",overall,invalid);
 
-    const entered = Object.keys(raw).filter(key => raw[key] !== undefined && raw[key] !== null);
-    const dmgMissing = raw.dmg === null || raw.dmg === undefined;
-    const tooMany = entered.length > PERFECTION_CONFIG.maxStatusesAllowed;
-    const invalid = !validLevel || dmgMissing ||
-      Object.keys(raw).some(key => raw[key] === null);
-
-    const rows = [];
-    const percentages = {};
-    const level1Values = {};
-    for (const [key, config] of Object.entries(PERFECTION_CONFIG.statuses)) {
-      const value = raw[key];
-      if (value === undefined || value === null) continue;
-      const level1 = Math.round((value - (level - 1)) * 10) / 10;
-      level1Values[key] = level1;
-      const pct = level1 >= 1 && level1 <= config.maxLevel1
-        ? (level1 / config.maxLevel1) * 100
-        : null;
-      percentages[key] = pct;
-      rows.push(`<div class="status-card"><h3>${config.label}</h3>
-        <div class="small-result">Entered value: <strong>${perfFmt(value)}</strong><br>
-        Level 1 value: <strong>${perfFmt(level1)}</strong><br>
-        Perfection: <strong>${pct === null ? "???" : perfFmt(pct) + "%"}</strong></div></div>`);
-    }
-    $("statusBreakdown").innerHTML = rows.join("");
-
-    let overall = null;
-    if (!invalid && !tooMany && entered.length >= 2 &&
-        entered.every(key => percentages[key] !== null && percentages[key] !== undefined)) {
-      overall = entered.reduce((sum, key) => sum + percentages[key], 0) / entered.length;
-    }
-    // A relic must have at least two statuses to receive a perfection score.
-    const overallText = invalid || tooMany || entered.length < 2 || overall === null
-      ? "???" : perfFmt(overall / 10) + " / 10";
-    const percentText = invalid || tooMany || entered.length < 2 || overall === null
-      ? "???" : perfFmt(overall) + "%";
-    setPerf("perfScore", overallText);
-    setPerf("perfPercent", percentText);
-    setPerf("perfCount", tooMany ? "???" : String(entered.length));
-    setPerf("generalTabScore", overallText);
-
-    for (const mode of ["raid", "challenge", "endless"]) {
-      const modeValue = raw[mode];
-      const modePct = percentages[mode];
-      const available = !invalid && modeValue !== undefined && modeValue !== null &&
-        modePct !== null && modePct !== undefined;
-      setPerf(mode + "TabScore", available ? perfFmt(modePct / 10) + " / 10 (" + perfFmt(modePct) + "%)" : "—");
-      if (available && raw.dmg !== undefined && raw.dmg !== null) {
-        const multiplier = (1 + raw.dmg / 100) * (1 + modeValue / 100);
-        const bonus = (multiplier - 1) * 100;
-        setPerf(mode + "Multiplier", perfFmt(multiplier) + "×  (+" + perfFmt(bonus) + "%)");
-      } else {
-        setPerf(mode + "Multiplier", "—");
-      }
+    for (const stat of CONFIG.dmg.stats) {
+      const pair = pairScore(baseResult,statusResults[stat.key]);
+      const scoreEl = $(`dmg${stat.key[0].toUpperCase()+stat.key.slice(1)}Score`);
+      const multEl = $(`dmg${stat.key[0].toUpperCase()+stat.key.slice(1)}Multiplier`);
+      scoreEl.textContent = scoreText(pair);
+      const mult = multiplier(base,values[stat.key]);
+      multEl.textContent = mult === null ? "—" : `${perfFmt(mult)}× (+${perfFmt((mult-1)*100)}%)`;
     }
   }
+  function statusCard(label,value,result) {
+    return `<div class="status-card"><h3>${label}</h3><div class="small-result">Entered value: <strong>${perfFmt(value)}</strong><br>Level 1 value: <strong>${result ? perfFmt(result.level1) : "—"}</strong><br>Perfection: <strong>${result ? perfFmt(result.percent)+"%" : "???"}</strong></div></div>`;
+  }
+  function updateHP() {
+    const levelRaw = $("hpLevel").value.trim(), level = Number(levelRaw);
+    const levelOK = levelRaw !== "" && Number.isInteger(level) && level >= 1 && level <= 100000;
+    const hp = readNumber("hpBase"), endless = readNumber("hpEndless"), defense = readNumber("hpDefense");
+    const challengeDef = readNumber("hpChallengeDefense");
+    const values = [hp,endless,defense];
+    const entered = values.filter(v => v !== undefined && v !== null).length + (challengeDef !== undefined ? 1 : 0);
+    const malformed = values.some(v => v === null) || challengeDef === null;
+    const results = [
+      levelOK ? statusPercent(hp,level,10) : null,
+      levelOK ? statusPercent(endless,level,15) : null,
+      levelOK ? statusPercent(defense,level,10) : null
+    ];
+    const labels = ["HP","Endless HP","Endless DEF"];
+    const rawValues = [hp,endless,defense];
+    $("hpBreakdown").innerHTML = labels.map((label,i) => rawValues[i] !== undefined && rawValues[i] !== null ? statusCard(label,rawValues[i],results[i]) : "").join("");
+    const allValid = levelOK && values.every(v => v !== undefined && v !== null) &&
+      results.every(x => x !== null && x.percent !== null) && challengeDef === undefined && !malformed;
+    const overall = allValid ? results.reduce((a,b)=>a+b.percent,0)/3 : null;
+    const invalid = malformed || challengeDef !== undefined || (levelOK && values.some(v=>v!==undefined && v!==null) && !allValid);
+    $("hpScore").textContent = allValid ? `${perfFmt(overall/10)} / 10` : "—";
+    $("hpPercent").textContent = allValid ? `${perfFmt(overall)}%` : "—";
+    $("hpCount").textContent = challengeDef !== undefined ? "Invalid: Challenge DEF" : `${values.filter(v=>v!==undefined && v!==null).length}/3`;
+    setEvaluation("hpEvaluation",overall,invalid);
 
-  function updateStatusSimulator() {
-    const currentLevel = Number($("perfLevel").value);
-    const targetLevel = Number($("simTargetLevel").value);
-    const currentLevelValid = $("perfLevel").value.trim() !== "" && Number.isInteger(currentLevel) && currentLevel >= 1 && currentLevel <= 100000;
-    const targetValid = $("simTargetLevel").value.trim() !== "" && Number.isInteger(targetLevel) && targetLevel >= 1 && targetLevel <= 100000;
-    if (!currentLevelValid || !targetValid || targetLevel < currentLevel) {
+    $("hpEndlessScore").textContent = scoreText(pairScore(results[0],results[1]));
+    $("hpDefenseScore").textContent = scoreText(pairScore(results[0],results[2]));
+    const hpMultiplier = multiplier(hp,endless);
+    const baseHealthRaw = $("baseHealth").value.trim(), baseHealth = Number(baseHealthRaw);
+    if (hpMultiplier !== null && baseHealthRaw !== "" && Number.isFinite(baseHealth) && baseHealth > 0) {
+      $("hpHealthMultiplier").textContent = `${perfFmt(hpMultiplier)}× (+${perfFmt((hpMultiplier-1)*100)}%)`;
+      $("hpFinalHealth").textContent = fmt(baseHealth * hpMultiplier);
+    } else {
+      $("hpHealthMultiplier").textContent = hpMultiplier === null ? "—" : `${perfFmt(hpMultiplier)}×`;
+      $("hpFinalHealth").textContent = "Enter Base HP";
+    }
+    $("hpDefenseMultiplier").textContent = defense === undefined || defense === null ? "—" : `${perfFmt(1+defense/100)}× (+${perfFmt(defense)}%)`;
+  }
+
+  function updateSimulator() {
+    const mode = $("dmgMode").hidden ? "hp" : "dmg";
+    const levelId = mode === "dmg" ? "dmgLevel" : "hpLevel";
+    const levelRaw = $(levelId).value.trim(), currentLevel = Number(levelRaw);
+    const targetRaw = $("simTargetLevel").value.trim(), targetLevel = Number(targetRaw);
+    const valid = levelRaw !== "" && targetRaw !== "" && Number.isInteger(currentLevel) &&
+      Number.isInteger(targetLevel) && currentLevel >= 1 && targetLevel >= currentLevel && targetLevel <= 100000;
+    if (!valid) {
       $("simLevelsGained").value = "";
-      const bothBlank = $("perfLevel").value.trim() === "" && $("simTargetLevel").value.trim() === "";
-      $("simLevelSummary").textContent = bothBlank ? "—" : "Enter valid levels (target ≥ current level)";
+      $("simLevelSummary").textContent = "Enter a target level ≥ current level";
       $("simStatusRows").innerHTML = "";
-      $("simFinalBonusRows").innerHTML = "";
-      $("simFinalMultiplierRows").innerHTML = "";
+      $("simFinalLabel").textContent = mode === "dmg" ? "Final Endless multiplier" : "Final Endless HP";
+      $("simFinalValue").textContent = "—";
       return;
     }
-
     const gained = targetLevel - currentLevel;
-    $("simLevelsGained").value = "+" + gained + (gained === 1 ? " level" : " levels");
-    $("simLevelSummary").textContent = "Level " + currentLevel + " → Level " + targetLevel + " ( +" + gained + " )";
-    const statuses = [["dmg", "DMG"], ["raid", "Raid Damage"], ["challenge", "Challenge"], ["endless", "Endless"]];
+    $("simLevelsGained").value = `+${gained} ${gained === 1 ? "level" : "levels"}`;
+    $("simLevelSummary").textContent = `Level ${currentLevel} → Level ${targetLevel}`;
+    const specs = mode === "dmg"
+      ? [{id:"dmgBase",label:"DMG"},{id:"dmgRaid",label:"Raid Damage"},{id:"dmgEndless",label:"Endless Damage"},{id:"dmgChallenge",label:"Challenge Damage"}]
+      : [{id:"hpBase",label:"HP"},{id:"hpEndless",label:"Endless HP"},{id:"hpDefense",label:"Endless DEF"}];
     const simulated = {};
     const rows = [];
-    const bonusRows = [];
-    for (const [key, label] of statuses) {
-      const raw = $("perf" + key[0].toUpperCase() + key.slice(1)).value.trim();
-      if (raw === "") continue;
-      const currentValue = Number(raw);
-      if (!Number.isFinite(currentValue) || currentValue < 1) continue;
-      const nextValue = Math.round((currentValue + gained) * 10) / 10;
-      simulated[key] = nextValue;
-      rows.push(`<div class="result-row"><span class="result-label">${label}</span><span class="value">${perfFmt(currentValue)} original + ${gained} = ${perfFmt(nextValue)}%</span></div>`);
-      bonusRows.push(`<div class="result-row"><span class="result-label">${label} bonus</span><span class="value">+${perfFmt(nextValue)}%</span></div>`);
+    for (const spec of specs) {
+      const raw = $(spec.id).value.trim();
+      if (!raw) continue;
+      const value = Number(raw);
+      if (!Number.isFinite(value) || value < 1) continue;
+      simulated[spec.id] = Math.round((value + gained) * 10) / 10;
+      rows.push(`<div class="result-row"><span class="result-label">${spec.label}</span><span class="value">${perfFmt(value)} + ${gained} = ${perfFmt(simulated[spec.id])}%</span></div>`);
     }
-    $("simStatusRows").innerHTML = rows.length ? rows.join("") : '<p class="note">Enter your relic statuses above to simulate them.</p>';
-    $("simFinalBonusRows").innerHTML = bonusRows.length ? bonusRows.join("") : '<p class="note">Enter your relic statuses above to see final bonuses.</p>';
-
-    const multiplierRows = [];
-    if (simulated.dmg !== undefined) {
-      const dmgMultiplier = 1 + simulated.dmg / 100;
-      multiplierRows.push(`<div class="result-row"><span class="result-label">DMG multiplier</span><span class="value">${perfFmt(dmgMultiplier)}× (+${perfFmt(simulated.dmg)}%)</span></div>`);
-      for (const [key, label] of [["raid", "Raid Damage"], ["challenge", "Challenge"], ["endless", "Endless"]]) {
-        if (simulated[key] === undefined) continue;
-        const multiplier = dmgMultiplier * (1 + simulated[key] / 100);
-        const combinedBonus = (multiplier - 1) * 100;
-        multiplierRows.push(`<div class="result-row"><span class="result-label">${label} multiplier</span><span class="value">${perfFmt(multiplier)}× (+${perfFmt(combinedBonus)}%)</span></div>`);
-      }
+    $("simStatusRows").innerHTML = rows.length ? rows.join("") : '<p class="note">Enter relic statuses above to simulate them.</p>';
+    if (mode === "dmg") {
+      const m = multiplier(simulated.dmgBase,simulated.dmgEndless);
+      $("simFinalLabel").textContent = "Final Endless multiplier";
+      $("simFinalValue").textContent = m === null ? "Need DMG + Endless" : `${perfFmt(m)}× (+${perfFmt((m-1)*100)}%)`;
+    } else {
+      const m = multiplier(simulated.hpBase,simulated.hpEndless);
+      const baseRaw = $("baseHealth").value.trim(), base = Number(baseRaw);
+      $("simFinalLabel").textContent = "Final Endless HP";
+      $("simFinalValue").textContent = m === null ? "Need HP + Endless HP" : baseRaw !== "" && Number.isFinite(base) && base > 0 ? fmt(base*m) : `${perfFmt(m)}× (enter Base HP)`;
     }
-    $("simFinalMultiplierRows").innerHTML = multiplierRows.length ? multiplierRows.join("") : '<p class="note">Enter DMG to calculate final multipliers.</p>';
   }
 
-  document.querySelectorAll(".tab-button").forEach(button => {
-    button.addEventListener("click", () => {
-      document.querySelectorAll(".tab-button").forEach(b => b.classList.toggle("active", b === button));
-      document.querySelectorAll(".tab-panel").forEach(panel =>
-        panel.classList.toggle("active", panel.id === "panel-" + button.dataset.tab));
-    });
-  });
-
-  ["perfLevel", "perfDmg", "perfRaid", "perfChallenge", "perfEndless"].forEach(id => {
-    $(id).addEventListener("input", () => {
-      updatePerfection();
-      updateStatusSimulator();
-    });
-  });
-  $("simTargetLevel").addEventListener("input", updateStatusSimulator);
-
-    $("level").addEventListener("input", updateLevel);
-  $("matLevel").addEventListener("input", updateMaterial);
-  $("quantity").addEventListener("input", updateMaterial);
-  $("rarity").addEventListener("change", updateMaterial);
-
-  updateLevel();
-  updateMaterial();
-  updatePerfection();
-  updateStatusSimulator();
+  function updateAll() { updateDMG(); updateHP(); }
+  document.querySelectorAll(".mode-tabs [data-mode]").forEach(button => button.addEventListener("click", () => {
+    document.querySelectorAll(".mode-tabs [data-mode]").forEach(b=>b.classList.toggle("active",b===button));
+    $("dmgMode").hidden = button.dataset.mode !== "dmg";
+    $("hpMode").hidden = button.dataset.mode !== "hp";
+    updateSimulator();
+  }));
+  document.querySelectorAll(".mode-panel .tabs [data-panel]").forEach(button => button.addEventListener("click", () => {
+    const parent = button.closest(".mode-panel");
+    parent.querySelectorAll("[data-panel]").forEach(b=>b.classList.toggle("active",b===button));
+    parent.querySelectorAll(".tab-panel").forEach(panel=>panel.classList.toggle("active",panel.id===button.dataset.panel));
+  }));
+  ["dmgLevel","dmgBase","dmgRaid","dmgEndless","dmgChallenge","hpLevel","hpBase","hpEndless","hpDefense","hpChallengeDefense","baseHealth"].forEach(id => $(id).addEventListener("input",() => { updateAll(); updateSimulator(); }));
+  $("simTargetLevel").addEventListener("input",updateSimulator);
+  ["level","matLevel","quantity"].forEach(id => $(id).addEventListener("input",id==="level"?updateLevel:updateMaterial));
+  $("rarity").addEventListener("change",updateMaterial);
+  updateLevel(); updateMaterial(); updateAll(); updateSimulator();
 })();
 </script>
 </body>
