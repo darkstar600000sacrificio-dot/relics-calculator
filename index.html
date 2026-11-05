@@ -1,15 +1,17 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
+<script>document.documentElement.dataset.theme = "dark";</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Relics Calculator | RPG Simulator</title>
 <link rel="icon" type="image/png" href="./favicon.png">
+<title>Relics Calculator | RPG Simulator</title>
 <meta name="theme-color" content="#0a0a0a">
 <style>
 :root {
   color-scheme: dark;
+  --theme-default: dark;
   --bg: #090909;
   --panel: #111111;
   --panel2: #171717;
@@ -30,7 +32,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 .container { width: 100%; max-width: 760px; margin: auto; }
-header { text-align: center; margin-bottom: 30px; }
+header { text-align: center; margin-bottom: 30px; position:relative; padding-top:4px; }
 .eyebrow {
   color: var(--gold-light);
   font-size: 11px;
@@ -153,6 +155,24 @@ footer {
   .result-row { align-items: flex-start; }
 }
 
+
+/* Temporary relic inventory */
+.inv-add-button,.inv-clear-button { cursor:pointer; font:inherit; font-size:12px; font-weight:700; border-radius:6px; transition:filter .15s,transform .15s; }
+.inv-add-button { margin-top:9px; width:100%; min-height:39px; padding:9px 12px; color:var(--gold-light); background:linear-gradient(135deg,#33270d,#171106); border:1px solid #755b27; }
+.inv-clear-button { padding:9px 11px; color:#e99a9a; background:#210d0d; border:1px solid #713333; white-space:nowrap; }
+.inv-add-button:hover,.inv-clear-button:hover { filter:brightness(1.25); }
+.inv-add-button:active,.inv-clear-button:active { transform:translateY(1px); }
+.inv-feedback { min-height:15px; margin-top:6px; color:#d6b96c; font-size:11px; line-height:1.4; }
+.inv-topline { display:flex; justify-content:space-between; align-items:center; margin:0 0 12px; color:#ddd; font-size:13px; }
+.inv-grid { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:9px; }
+.inv-slot { aspect-ratio:1; min-width:0; padding:4px; display:grid; place-items:center; border-radius:7px; cursor:pointer; color:#fff; font-weight:700; font-size:clamp(13px,2.4vw,18px); text-shadow:0 1px 3px #000b; box-shadow:inset 0 1px 0 #ffffff20,0 2px 5px #0006; transition:filter .15s,transform .15s; }
+.inv-slot:hover { filter:brightness(1.25); transform:translateY(-2px); }
+.inv-slot.godly { background:linear-gradient(145deg,#59451b,#30230b 72%); border:1px solid #80652d; color:#f1d27a; }
+.inv-slot.legendary { background:linear-gradient(145deg,#49245e,#261333 72%); border:1px solid #673b80; color:#d9a9f4; }
+.inv-slot.rare { background:linear-gradient(145deg,#1e4268,#10243d 72%); border:1px solid #315b83; color:#9bcfff; }
+.inv-slot:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+@media(max-width:520px) { .inv-grid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:7px; } .inv-clear-button { font-size:11px; padding:8px; } }
+
 /* Perfection Calculator */
 .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
 .tab-button {
@@ -185,11 +205,74 @@ footer {
 .evaluation.tier-green { color:#6fe08a; border:1px solid #26743b; background:#0b2914; }
 .evaluation.tier-orange { color:#ffb35c; border:1px solid #92531d; background:#2a1708; }
 .evaluation.tier-red { color:#ff7777; border:1px solid #812929; background:#290b0b; }
+
+
+/* Light theme: neutral surfaces become white and gold accents become darker. */
+.theme-toggle {
+  position:absolute; top:0; right:0; cursor:pointer; padding:8px 11px;
+  border:1px solid var(--gold); border-radius:7px; background:var(--panel);
+  color:var(--gold-light); font:inherit; font-size:12px; font-weight:700;
+}
+.theme-toggle:hover { filter:brightness(1.12); }
+:root[data-theme="light"] {
+  color-scheme:light;
+  --bg:#f5f5f3; --panel:#ffffff; --panel2:#f1f1ef;
+  --gold:#8a681e; --gold-light:#765713; --border:#b9a16b;
+  --text:#242424; --muted:#666666;
+}
+:root[data-theme="light"] body {
+  background:radial-gradient(ellipse at top,#fffdf5 0%,#f5f5f3 48%,#e9e9e6 100%);
+  color:#242424;
+}
+:root[data-theme="light"] h1 { color:#222; text-shadow:none; }
+:root[data-theme="light"] .card {
+  background:linear-gradient(145deg,#fff,#f8f8f6);
+  border-color:#c8b88f; box-shadow:0 8px 24px #00000012,inset 0 1px #ffffff;
+}
+:root[data-theme="light"] .card-heading { border-bottom-color:#00000016; }
+:root[data-theme="light"] .number { color:#765713; }
+:root[data-theme="light"] label { color:#555; }
+:root[data-theme="light"] input,
+:root[data-theme="light"] select {
+  background:#fff; color:#222; border-color:#c9c9c5;
+}
+:root[data-theme="light"] .result,
+:root[data-theme="light"] .status-card,
+:root[data-theme="light"] .formula {
+  background:#f5f5f2; border-color:#d1c5a8; color:#333;
+}
+:root[data-theme="light"] .result-label { color:#555; }
+:root[data-theme="light"] .value { color:#222; }
+:root[data-theme="light"] .result-row + .result-row { border-top-color:#00000012; }
+:root[data-theme="light"] .result-row.total .result-label,
+:root[data-theme="light"] .result-row.total .value { color:#765713; }
+:root[data-theme="light"] .note,
+:root[data-theme="light"] footer { color:#707070; }
+:root[data-theme="light"] .tab-button {
+  background:#fff; color:#444; border-color:#c9c1ad;
+}
+:root[data-theme="light"] .tab-button.active {
+  color:#765713; border-color:#9b792f; background:#a9873e18;
+}
+:root[data-theme="light"] .evaluation { background:#f4f4f1; color:#555; border-color:#d0d0ca; }
+:root[data-theme="light"] .inv-topline { color:#333; }
+:root[data-theme="light"] .inv-add-button {
+  color:#765713; background:linear-gradient(135deg,#f5edda,#fff);
+  border-color:#a98b4d;
+}
+:root[data-theme="light"] .inv-clear-button { background:#fff0f0; }
+:root[data-theme="light"] .theme-toggle { background:#fff; color:#765713; }
+:root[data-theme="light"] .formula code { color:#765713; }
+@media(max-width:520px) {
+  .theme-toggle { position:static; display:block; margin:0 0 14px auto; }
+}
+
 </style>
 </head>
 <body>
 <main class="container">
   <header>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode">☀ Light Mode</button>
     <div class="eyebrow">RPG Simulator · Tools</div>
     <h1>RELICS CALCULATOR</h1>
     <div class="subtitle">Relic XP and material calculator</div>
@@ -249,6 +332,8 @@ footer {
       <div class="field">
         <label for="quantity">Quantity</label>
         <input id="quantity" type="number" min="1" max="1000000" step="1" value="1">
+        <button class="inv-add-button" id="addToInv" type="button">＋ Add to INV</button>
+        <div class="inv-feedback" id="invFeedback" aria-live="polite"></div>
       </div>
     </div>
 
@@ -265,6 +350,27 @@ footer {
     <p class="note">Material XP = rarity coefficient × level × (level + 4) × quantity.</p>
   </section>
 
+
+  <section class="card" id="relicInventory">
+    <div class="card-heading">
+      <div class="number">INV</div>
+      <div style="flex:1;min-width:0">
+        <h2>Relic Inventory</h2>
+        <div class="card-desc">Temporary inventory · Click a relic to remove it</div>
+      </div>
+      <button class="inv-clear-button" id="clearInv" type="button">Clear All INV</button>
+    </div>
+    <div class="inv-topline">
+      <span class="result-label">Inventory slots</span>
+      <strong id="invCount">0 / 40</strong>
+    </div>
+    <div class="inv-grid" id="invGrid" aria-label="Relic inventory slots"></div>
+    <div class="result" aria-live="polite">
+      <div class="result-row"><span class="result-label">Total Relics</span><span class="value" id="invTotalRelics">0</span></div>
+      <div class="result-row total"><span class="result-label">Total Material XP</span><span class="value" id="invTotalXP">0</span></div>
+    </div>
+    <p class="note">Godly relics use gold slots, Legendary relics use purple slots, and Rare relics use blue slots. The inventory is kept only while this page remains open; refreshing or closing the page clears it.</p>
+  </section>
 
   <section class="card" id="perfectionCalculator">
     <div class="card-heading">
@@ -395,6 +501,63 @@ footer {
     el.setAttribute("aria-invalid", String(!ok));
     return ok ? n : null;
   }
+
+  // Temporary in-memory inventory: it intentionally resets on refresh/close.
+  const inventory = [];
+  const INV_LIMIT = 40;
+  const rarityInfo = {
+    "300": {name:"Godly", short:"G", className:"godly", coefficient:300},
+    "100": {name:"Legendary", short:"L", className:"legendary", coefficient:100},
+    "20": {name:"Rare", short:"R", className:"rare", coefficient:20}
+  };
+  function updateInventory() {
+    const grid = $("invGrid");
+    grid.innerHTML = inventory.map((item,index) => `
+      <button type="button" class="inv-slot ${item.className}" data-inv-index="${index}"
+        title="${item.name} Level ${item.level} · ${fmt(item.xp)} XP — click to remove"
+        aria-label="Remove ${item.name} level ${item.level} relic">${item.level}</button>`).join("");
+    $("invCount").textContent = `${inventory.length} / ${INV_LIMIT}`;
+    $("invTotalRelics").textContent = inventory.length.toLocaleString("en-US");
+    const totalXP = inventory.reduce((sum,item)=>sum+item.xp,0);
+    $("invTotalXP").textContent = fmt(totalXP);
+    grid.querySelectorAll("[data-inv-index]").forEach(button => button.addEventListener("click",() => {
+      const index = Number(button.dataset.invIndex);
+      inventory.splice(index,1);
+      $("invFeedback").textContent = "Relic removed from INV.";
+      updateInventory();
+    }));
+  }
+  function addToInventory() {
+    const rarityValue = $("rarity").value;
+    const rarity = rarityInfo[rarityValue];
+    const levelRaw = $("matLevel").value.trim();
+    const quantityRaw = $("quantity").value.trim();
+    const level = Number(levelRaw), quantity = Number(quantityRaw);
+    if (!rarity || !levelRaw || !Number.isSafeInteger(level) || level < 1 || level > 1000000) {
+      $("invFeedback").textContent = "Enter a valid material level first."; return;
+    }
+    if (!quantityRaw || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 1000000) {
+      $("invFeedback").textContent = "Enter a valid quantity first."; return;
+    }
+    if (inventory.length + quantity > INV_LIMIT) {
+      $("invFeedback").textContent = `Not enough slots. You can add only ${INV_LIMIT-inventory.length} more relic(s).`; return;
+    }
+    const xp = rarity.coefficient * level * (level + 4);
+    for (let i=0;i<quantity;i++) inventory.push({rarity:rarityValue,name:rarity.name,short:rarity.short,className:rarity.className,level,xp});
+    $("invFeedback").textContent = `${quantity} ${rarity.name} Level ${level} relic(s) added to INV.`;
+    updateInventory();
+  }
+  $("addToInv").addEventListener("click",addToInventory);
+  // Clear immediately: native confirm dialogs can be blocked by embedded browsers.
+  // The button always empties the in-memory array and refreshes every INV counter.
+  $("clearInv").addEventListener("click", (event) => {
+    event.preventDefault();
+    inventory.splice(0, inventory.length);
+    $("invFeedback").textContent = "INV cleared — all relics removed.";
+    updateInventory();
+  });
+  updateInventory();
+
   function updateLevel() {
     const level = validInt("level", 1, 1000000);
     if (level === null) { $("nextXP").textContent = "—"; $("totalXP").textContent = "—"; return; }
@@ -604,6 +767,19 @@ footer {
   ["level","matLevel","quantity"].forEach(id => $(id).addEventListener("input",id==="level"?updateLevel:updateMaterial));
   $("rarity").addEventListener("change",updateMaterial);
   updateLevel(); updateMaterial(); updateAll(); updateSimulator();
+
+  const themeToggle = $("themeToggle");
+  function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    const light = theme === "light";
+    themeToggle.textContent = light ? "☾ Dark Mode" : "☀ Light Mode";
+    themeToggle.setAttribute("aria-label", light ? "Switch to dark mode" : "Switch to light mode");
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", light ? "#f5f5f3" : "#0a0a0a");
+  }
+  themeToggle.addEventListener("click", () => {
+    setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
+  });
+  setTheme("dark");
 })();
 </script>
 </body>
