@@ -207,6 +207,37 @@ footer {
 .evaluation.tier-red { color:#ff7777; border:1px solid #812929; background:#290b0b; }
 
 
+
+
+.chart-tabs { margin:14px 0 12px; } .chart-panel { display:none; } .chart-panel.active { display:block; } .compare-field { max-width:240px; margin:8px 0 12px; } .inventory-chart-panel { margin-top:18px; } .chart-panel svg,.inventory-chart-panel svg { width:100%; height:auto; display:block; } .chart-legend { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; color:#bbb; font-size:11px; margin:8px 0; } .heat-grid { display:grid; grid-template-columns:repeat(11,minmax(0,1fr)); gap:5px; margin:12px 0; } .heat-cell { padding:12px 2px; text-align:center; border-radius:5px; font-size:10px; color:#fff; min-width:0; } .heat-cell strong { display:block; font-size:11px; } .chart-summary { display:flex; flex-wrap:wrap; justify-content:center; gap:10px 18px; color:#bbb; font-size:12px; margin-top:10px; } .chart-summary b { color:#eee; }
+@media(max-width:520px){.chart-tabs .tab-button{flex:1 1 40%;}.heat-grid{gap:3px}.heat-cell{font-size:9px;padding:9px 1px}.heat-cell strong{font-size:9px}}
+
+/* Relative XP efficiency chart */
+.efficiency-panel { margin-top:18px; padding:16px 14px 13px; border:1px solid #493b20; border-radius:9px; background:#080808; }
+.efficiency-title { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px; }
+.efficiency-title h3 { margin:0; color:var(--gold-light); font-size:14px; }
+.efficiency-title p { margin:5px 0 0; color:var(--muted); font-size:11px; line-height:1.5; }
+.efficiency-legend { display:flex; flex-wrap:wrap; gap:14px; margin:8px 0 5px; font-size:11px; color:#bbb; }
+.efficiency-legend span { display:inline-flex; align-items:center; gap:6px; }
+.legend-dot { width:9px; height:9px; border-radius:50%; display:inline-block; }
+.legend-cost { background:#ff5c5c; } .legend-gain { background:#45d483; }
+.efficiency-chart { width:100%; overflow:hidden; }
+.efficiency-chart svg { display:block; width:100%; height:auto; min-height:190px; }
+.efficiency-table-wrap { overflow-x:auto; margin-top:10px; }
+.efficiency-table { width:100%; min-width:590px; border-collapse:collapse; font-size:11px; font-variant-numeric:tabular-nums; }
+.efficiency-table th,.efficiency-table td { padding:9px 7px; text-align:center; border-bottom:1px solid #ffffff12; white-space:nowrap; }
+.efficiency-table thead th { color:#aaa; font-weight:600; }
+.efficiency-table th:first-child,.efficiency-table td:first-child { position:sticky; left:0; text-align:left; background:#080808; z-index:1; }
+.efficiency-table .cost-row th,.efficiency-table .cost-row td { color:#ff7777; }
+.efficiency-table .gain-row th,.efficiency-table .gain-row td { color:#63df96; }
+.efficiency-table .eff-row th,.efficiency-table .eff-row td { color:var(--gold-light); }
+.efficiency-table .selected-level { background:#a9873e20; outline:1px solid #a9873e55; font-weight:800; }
+.efficiency-footnote { margin:10px 0 0; color:#777; font-size:10px; line-height:1.5; }
+:root[data-theme="light"] .efficiency-panel { background:#fff; border-color:#c8b88f; }
+:root[data-theme="light"] .efficiency-table th:first-child,:root[data-theme="light"] .efficiency-table td:first-child { background:#fff; }
+:root[data-theme="light"] .efficiency-table th,:root[data-theme="light"] .efficiency-table td { border-bottom-color:#00000012; }
+@media(max-width:520px) { .efficiency-panel { padding:13px 9px; } .efficiency-chart svg { min-height:160px; } }
+
 /* Light theme: neutral surfaces become white and gold accents become darker. */
 .theme-toggle {
   position:absolute; top:0; right:0; cursor:pointer; padding:8px 11px;
@@ -305,6 +336,42 @@ footer {
       </div>
     </div>
     <p class="note">Total XP is the cumulative amount required to reach the selected level from Level 1.</p>
+
+    <div class="efficiency-panel" aria-live="polite">
+      <div class="efficiency-title">
+        <div>
+          <h3>Relative XP Efficiency</h3>
+          <p>Compare the total XP invested to create each level with the XP returned when that relic is consumed as material.</p>
+        </div>
+      </div>
+      <div class="tabs chart-tabs" role="tablist" aria-label="XP analysis charts">
+        <button class="tab-button active" type="button" data-chart="lineChartPanel">XP Trend</button>
+        <button class="tab-button" type="button" data-chart="donutChartPanel">XP Recovery</button>
+        <button class="tab-button" type="button" data-chart="compareChartPanel">Compare Levels</button>
+        <button class="tab-button" type="button" data-chart="heatmapChartPanel">Efficiency Map</button>
+      </div>
+      <div class="chart-panel active" id="lineChartPanel">
+        <div class="efficiency-legend"><span><i class="legend-dot legend-cost"></i> XP spent</span><span><i class="legend-dot legend-gain"></i> Material XP</span><span><i class="legend-dot" style="background:#d6b96c"></i> Return / cost</span></div>
+        <div class="efficiency-chart" id="efficiencyChart"></div>
+      </div>
+      <div class="chart-panel" id="donutChartPanel"><div id="recoveryDonut" class="efficiency-chart"></div></div>
+      <div class="chart-panel" id="compareChartPanel">
+        <div class="field compare-field"><label for="compareLevel">Compare selected level with</label><input id="compareLevel" type="number" min="1" max="1000000" step="1" value="20"></div>
+        <div id="compareChart" class="efficiency-chart"></div>
+      </div>
+      <div class="chart-panel" id="heatmapChartPanel"><div id="efficiencyHeatmap" class="efficiency-chart"></div></div>
+      <div class="efficiency-table-wrap">
+        <table class="efficiency-table" id="efficiencyTable">
+          <thead><tr id="efficiencyLevels"><th>Level</th></tr></thead>
+          <tbody>
+            <tr class="cost-row" id="efficiencyCost"><th>XP Spent</th></tr>
+            <tr class="gain-row" id="efficiencyGain"><th>Material XP</th></tr>
+            <tr class="eff-row" id="efficiencyRatio"><th>Return / Cost</th></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="efficiency-footnote">11 levels are displayed: five below, the selected level, and five above. The interval is 20% of the selected level (rounded to the nearest whole level). Levels cannot go below 1. Material XP follows the rarity selected in the Material Calculator.</p>
+    </div>
   </section>
 
   <section class="card">
@@ -372,6 +439,7 @@ footer {
       <div class="result-row"><span class="result-label">XP Progress to Next Level</span><span class="value" id="invResultProgress">27,000 / 28,500 (94.74%)</span></div>
     </div>
     <p class="note">Level projection assumes the target relic starts at Level 19 with 27,000 / 28,500 XP (equivalent to a Level 1 relic upgraded with four Godly Level 11 relics). All inventory XP is added to that starting progress. Godly relics use gold slots, Legendary relics use purple slots, and Rare relics use blue slots. The inventory is temporary and clears when the page is refreshed or closed.</p>
+    <div class="efficiency-panel inventory-chart-panel"><div class="efficiency-title"><div><h3>Inventory Breakdown</h3><p>Distribution of your stored relics and their contribution to total material XP.</p></div></div><div id="inventoryStatsChart" class="efficiency-chart"></div></div>
   </section>
 
   <section class="card" id="perfectionCalculator">
@@ -547,6 +615,7 @@ footer {
       $("invFeedback").textContent = "Relic removed from INV.";
       updateInventory();
     }));
+    updateInventoryStatsChart();
   }
   function addToInventory() {
     const rarityValue = $("rarity").value;
@@ -584,12 +653,61 @@ footer {
     if (level === null) { $("nextXP").textContent = "—"; $("totalXP").textContent = "—"; return; }
     $("nextXP").textContent = fmt(75 * level * (level + 1));
     $("totalXP").textContent = fmt(25 * (level - 1) * level * (level + 1));
+    updateEfficiencyChart();
   }
+
+  function updateEfficiencyChart() {
+    const selected = validInt("level", 1, 1000000);
+    const coefficient = Number($("rarity").value);
+    if (selected === null || !rarityInfo[String(coefficient)]) return;
+    const levels = Array.from({length:11}, (_,i) => Math.max(1, Math.round(selected * (1 + (i-5)*0.2))));
+    const rows = levels.map(level => ({level, spent:25*(level-1)*level*(level+1), gained:coefficient*level*(level+4)}));
+    const maxValue=Math.max(1,...rows.flatMap(r=>[r.spent,r.gained]));
+    const width=760,height=270,left=62,right=18,top=18,bottom=42,plotW=width-left-right,plotH=height-top-bottom;
+    const x=i=>left+plotW*i/10, y=v=>top+plotH-(v/maxValue)*plotH;
+    const compact=n=>n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':String(Math.round(n));
+    let grid=''; for(let i=0;i<=4;i++){const val=maxValue*(4-i)/4,yy=y(val);grid+=`<line x1="${left}" y1="${yy}" x2="${width-right}" y2="${yy}" stroke="#ffffff18"/><text x="${left-9}" y="${yy+4}" fill="#888" font-size="11" text-anchor="end">${compact(val)}</text>`;}
+    const path=key=>rows.map((r,i)=>`${i?'L':'M'} ${x(i)} ${y(r[key])}`).join(' ');
+    const dots=(key,color)=>rows.map((r,i)=>`<circle cx="${x(i)}" cy="${y(r[key])}" r="${i===5?5:3.5}" fill="${color}" stroke="#111" stroke-width="1.5"><title>Level ${r.level}: ${fmt(r[key])} XP</title></circle>`).join('');
+    const labels=rows.map((r,i)=>`<text x="${x(i)}" y="${height-15}" fill="${i===5?'#d6b96c':'#888'}" font-size="11" text-anchor="middle">${r.level}</text>`).join('');
+    // Efficiency is normalized to the chart's secondary 0-100% range.
+    const maxRatio=Math.max(100,...rows.map(r=>r.spent?r.gained/r.spent*100:0));
+    const ratioY=v=>top+plotH-(v/maxRatio)*plotH;
+    const ratioPath=rows.map((r,i)=>`${i?'L':'M'} ${x(i)} ${ratioY(r.spent?r.gained/r.spent*100:0)}`).join(' ');
+    const ratioDots=rows.map((r,i)=>`<circle cx="${x(i)}" cy="${ratioY(r.spent?r.gained/r.spent*100:0)}" r="3" fill="#d6b96c"><title>Level ${r.level}: ${r.spent?(r.gained/r.spent*100).toFixed(2):'—'}% return</title></circle>`).join('');
+    $("efficiencyChart").innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="XP spent, material XP and return efficiency across eleven levels">${grid}<line x1="${x(5)}" y1="${top}" x2="${x(5)}" y2="${height-bottom}" stroke="#a9873e" stroke-dasharray="4 4"/><path d="${path('spent')}" fill="none" stroke="#ff5c5c" stroke-width="3"/><path d="${path('gained')}" fill="none" stroke="#45d483" stroke-width="3"/><path d="${ratioPath}" fill="none" stroke="#d6b96c" stroke-width="2.5" stroke-dasharray="6 4"/>${dots('spent','#ff5c5c')}${dots('gained','#45d483')}${ratioDots}${labels}</svg>`;
+    const cells=(key,formatter)=>rows.map((r,i)=>`<td class="${i===5?'selected-level':''}">${formatter(r[key])}</td>`).join('');
+    $("efficiencyLevels").innerHTML='<th>Level</th>'+cells('level',v=>v);
+    $("efficiencyCost").innerHTML='<th>XP Spent</th>'+cells('spent',fmt);
+    $("efficiencyGain").innerHTML='<th>Material XP</th>'+cells('gained',fmt);
+    $("efficiencyRatio").innerHTML='<th>Return / Cost</th>'+rows.map((r,i)=>`<td class="${i===5?'selected-level':''}">${r.spent?(r.gained/r.spent*100).toFixed(1)+'%':'—'}</td>`).join('');
+    // Donut: show recovered XP, unrecovered cost, and excess return when applicable.
+    const spent=rows[5].spent,gained=rows[5].gained,recovered=Math.min(spent,gained),lost=Math.max(0,spent-gained),excess=Math.max(0,gained-spent);
+    const parts=[{v:recovered,c:'#45d483',l:'XP returned'},{v:lost,c:'#ff5c5c',l:'XP not recovered'},{v:excess,c:'#d6b96c',l:'XP surplus'}].filter(p=>p.v>0);
+    const total=parts.reduce((a,p)=>a+p.v,0)||1;let offset=0;const circumference=2*Math.PI*68;
+    const circles=parts.map(p=>{const len=p.v/total*circumference,el=`<circle cx="120" cy="100" r="68" fill="none" stroke="${p.c}" stroke-width="24" stroke-dasharray="${len} ${circumference-len}" stroke-dashoffset="${-offset}" transform="rotate(-90 120 100)"/>`;offset+=len;return el;}).join('');
+    $("recoveryDonut").innerHTML=`<svg viewBox="0 0 480 220" role="img" aria-label="XP recovery breakdown for level ${selected}"><g>${circles}<text x="120" y="96" text-anchor="middle" fill="#eee" font-size="15" font-weight="700">Level ${selected}</text><text x="120" y="116" text-anchor="middle" fill="#d6b96c" font-size="12">${spent?((gained/spent)*100).toFixed(1):'—'}% return</text></g><g transform="translate(235 55)">${parts.map((p,i)=>`<circle cx="0" cy="${i*34}" r="5" fill="${p.c}"/><text x="14" y="${i*34+4}" fill="#bbb" font-size="12">${p.l}: ${fmt(p.v)} XP</text>`).join('')}</g></svg>`;
+    // Compare selected level with a user-chosen second level.
+    const other=validInt('compareLevel',1,1000000)||Math.max(1,selected*2);
+    const compare=[selected,other].map((lv,i)=>({lv,spent:25*(lv-1)*lv*(lv+1),gained:coefficient*lv*(lv+4)}));
+    const maxC=Math.max(1,...compare.flatMap(o=>[o.spent,o.gained]));
+    $("compareChart").innerHTML=`<svg viewBox="0 0 600 220" role="img" aria-label="Comparison of levels ${selected} and ${other}">${compare.map((o,i)=>{const x0=120+i*260;const h1=o.spent/maxC*130,h2=o.gained/maxC*130;return `<text x="${x0+70}" y="18" text-anchor="middle" fill="#d6b96c" font-size="13">Level ${o.lv}</text><rect x="${x0}" y="${150-h1}" width="55" height="${h1}" rx="4" fill="#ff5c5c"><title>XP spent: ${fmt(o.spent)}</title></rect><rect x="${x0+70}" y="${150-h2}" width="55" height="${h2}" rx="4" fill="#45d483"><title>Material XP: ${fmt(o.gained)}</title></rect><text x="${x0+27}" y="169" text-anchor="middle" fill="#ff8888" font-size="10">Spent</text><text x="${x0+97}" y="169" text-anchor="middle" fill="#7be5a7" font-size="10">Material</text><text x="${x0+62}" y="195" text-anchor="middle" fill="#aaa" font-size="11">${o.spent?(o.gained/o.spent*100).toFixed(1):'—'}% return</text>`}).join('')}</svg>`;
+    // Heatmap uses return/cost, with color intensity indicating efficiency.
+    $("efficiencyHeatmap").innerHTML=`<div class="heat-grid">${rows.map((r,i)=>{const pct=r.spent?r.gained/r.spent*100:0;const t=Math.min(1,pct/100);const bg=pct>=100?`rgba(69,212,131,${.2+t*.65})`:`rgba(255,92,92,${.16+(1-t)*.58})`;return `<div class="heat-cell" style="background:${bg};${i===5?'outline:2px solid #d6b96c;':''}" title="Level ${r.level}: ${pct.toFixed(2)}% return"><strong>${r.level}</strong>${pct.toFixed(1)}%</div>`}).join('')}</div><div class="chart-summary"><span>Green = return ≥ cost</span><span>Red = return below cost</span><span>Gold border = selected level</span></div>`;
+  }
+
+  function updateInventoryStatsChart(){
+    const groups=['300','100','20'].map(k=>({key:k,label:rarityInfo[k].name,color:k==='300'?'#d6b96c':k==='100'?'#bd83df':'#70b8f5',count:inventory.filter(x=>x.rarity===k).length,xp:inventory.filter(x=>x.rarity===k).reduce((a,x)=>a+x.xp,0)}));
+    const max=Math.max(1,...groups.map(g=>g.xp));
+    $("inventoryStatsChart").innerHTML=`<svg viewBox="0 0 640 205" role="img" aria-label="Inventory relic counts and XP by rarity">${groups.map((g,i)=>{const y=30+i*58,w=g.xp/max*390;return `<text x="8" y="${y+13}" fill="${g.color}" font-size="12">${g.label} (${g.count})</text><rect x="125" y="${y}" width="390" height="19" rx="5" fill="#ffffff10"/><rect x="125" y="${y}" width="${w}" height="19" rx="5" fill="${g.color}"/><text x="525" y="${y+14}" fill="#ddd" font-size="11">${fmt(g.xp)} XP</text>`}).join('')}</svg><div class="chart-summary"><span>Relics: <b>${inventory.length}</b></span><span>Total material XP: <b>${fmt(groups.reduce((a,g)=>a+g.xp,0))}</b></span></div>`;
+  }
+
   function updateMaterial() {
     const level = validInt("matLevel", 1, 1000000), quantity = validInt("quantity", 1, 1000000);
     if (level === null || quantity === null) { $("perXP").textContent = "—"; $("materialXP").textContent = "—"; return; }
     const per = Number($("rarity").value) * level * (level + 4);
     $("perXP").textContent = fmt(per); $("materialXP").textContent = fmt(per * quantity);
+    updateEfficiencyChart();
   }
 
   const CONFIG = {
@@ -785,8 +903,13 @@ footer {
   }));
   ["dmgLevel","dmgBase","dmgRaid","dmgEndless","dmgChallenge","hpLevel","hpBase","hpEndless","hpDefense","hpChallengeDefense","baseHealth"].forEach(id => $(id).addEventListener("input",() => { updateAll(); updateSimulator(); }));
   $("simTargetLevel").addEventListener("input",updateSimulator);
+  document.querySelectorAll(".chart-tabs [data-chart]").forEach(button=>button.addEventListener("click",()=>{
+    document.querySelectorAll(".chart-tabs [data-chart]").forEach(b=>b.classList.toggle("active",b===button));
+    document.querySelectorAll(".chart-panel").forEach(panel=>panel.classList.toggle("active",panel.id===button.dataset.chart));
+  }));
+  $("compareLevel").addEventListener("input",updateEfficiencyChart);
   ["level","matLevel","quantity"].forEach(id => $(id).addEventListener("input",id==="level"?updateLevel:updateMaterial));
-  $("rarity").addEventListener("change",updateMaterial);
+  $("rarity").addEventListener("change",() => { updateMaterial(); updateEfficiencyChart(); });
   updateLevel(); updateMaterial(); updateAll(); updateSimulator();
 
   const themeToggle = $("themeToggle");
