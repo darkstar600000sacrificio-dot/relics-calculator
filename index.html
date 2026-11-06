@@ -238,6 +238,42 @@ footer {
 :root[data-theme="light"] .efficiency-table th,:root[data-theme="light"] .efficiency-table td { border-bottom-color:#00000012; }
 @media(max-width:520px) { .efficiency-panel { padding:13px 9px; } .efficiency-chart svg { min-height:160px; } }
 
+/* Saved relic comparison */
+.compare-save-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:15px; }
+.compare-save-button { cursor:pointer; padding:10px 14px; border-radius:7px; border:1px solid #80652d; color:#f1d27a; background:linear-gradient(135deg,#33270d,#171106); font:inherit; font-size:12px; font-weight:700; }
+.compare-save-button:hover { filter:brightness(1.2); }
+.compare-save-feedback { min-height:16px; color:var(--gold-light); font-size:11px; }
+.compare-slots { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:14px 0 18px; }
+.compare-slot { min-width:0; border:1px solid #393939; border-radius:9px; padding:14px; background:#0a0a0a; }
+.compare-slot h3 { margin:0 0 7px; color:var(--gold-light); font-size:14px; }
+.compare-slot .compare-slot-level { color:#aaa; font-size:11px; margin-bottom:10px; }
+.compare-slot-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px 10px; color:#bbb; font-size:11px; }
+.compare-slot-stats strong { color:#eee; font-variant-numeric:tabular-nums; }
+.compare-slot-footer { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:12px; }
+.compare-remove { cursor:pointer; border:1px solid #713333; border-radius:5px; background:#210d0d; color:#f0a0a0; padding:6px 9px; font:inherit; font-size:10px; }
+.compare-empty { min-height:128px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; color:#777; font-size:11px; line-height:1.6; border:1px dashed #414141; border-radius:8px; padding:14px; }
+.compare-controls { margin:14px 0 10px; }
+.compare-controls .field { max-width:260px; }
+.compare-chart-tabs { margin:14px 0 10px; }
+.compare-chart-wrap { border:1px solid #292929; border-radius:8px; background:#080808; padding:10px 8px 4px; overflow:hidden; }
+.compare-chart-wrap svg { display:block; width:100%; height:auto; }
+.compare-winner-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:14px; }
+.compare-winner { border:1px solid #333; border-radius:8px; padding:12px; background:#0a0a0a; min-width:0; }
+.compare-winner h4 { color:var(--gold-light); font-size:12px; margin:0 0 8px; }
+.compare-winner p { margin:5px 0; color:#aaa; font-size:11px; line-height:1.5; }
+.compare-winner strong { color:#eee; }
+.compare-winner .winner { color:#7be5a7; font-weight:700; }
+.compare-winner .tie { color:#d6b96c; font-weight:700; }
+.compare-empty-state { color:#888; text-align:center; font-size:12px; line-height:1.7; padding:22px 12px; border:1px dashed #414141; border-radius:8px; }
+:root[data-theme="light"] .compare-slot,:root[data-theme="light"] .compare-winner { background:#f7f7f4; border-color:#d2c9b6; }
+:root[data-theme="light"] .compare-empty { border-color:#c8c8c2; color:#666; }
+:root[data-theme="light"] .compare-slot-stats,:root[data-theme="light"] .compare-winner p { color:#555; }
+:root[data-theme="light"] .compare-slot-stats strong,:root[data-theme="light"] .compare-winner strong { color:#222; }
+:root[data-theme="light"] .compare-chart-wrap { background:#fff; border-color:#d2c9b6; }
+:root[data-theme="light"] .compare-save-button { background:linear-gradient(135deg,#f5edda,#fff); color:#765713; border-color:#a98b4d; }
+:root[data-theme="light"] .compare-remove { background:#fff0f0; color:#9b3535; }
+@media(max-width:520px) { .compare-slots,.compare-winner-grid { grid-template-columns:1fr; } .compare-controls .field { max-width:none; } .compare-slot-stats { gap:6px; } }
+
 /* Light theme: neutral surfaces become white and gold accents become darker. */
 .theme-toggle {
   position:absolute; top:0; right:0; cursor:pointer; padding:8px 11px;
@@ -473,6 +509,10 @@ footer {
       </div>
       <div class="status-grid" id="dmgBreakdown"></div>
       <div class="evaluation" id="dmgEvaluation" aria-live="polite">Enter a level, DMG, and at least 1 additional status to evaluate this relic.</div>
+      <div class="compare-save-row">
+        <button class="compare-save-button" id="saveDmgRelic" type="button">＋ Add current relic to comparison</button>
+        <span class="compare-save-feedback" id="compareSaveFeedback" aria-live="polite"></span>
+      </div>
       <h3 class="mode-heading">Perfection by Mode & Real Damage Multipliers</h3>
       <div class="tabs" role="tablist" aria-label="DMG mode perfection">
         <button class="tab-button active" type="button" data-panel="dmgRaidPanel">Raid</button>
@@ -553,6 +593,46 @@ footer {
       <code>Real DMG multiplier = (1 + DMG ÷ 100) × (1 + mode DMG ÷ 100)</code><br>
       <code>Final HP = Base HP × (1 + HP ÷ 100) × (1 + Endless HP ÷ 100)</code><br>
       Level 1 maximums: DMG 10, Raid 10, Challenge Damage 35, Endless Damage 35; HP 10, Endless HP 15, Endless DEF 10. Challenge DEF has a listed maximum of 5 but is not a working HP relic status.
+    </div>
+  </section>
+
+  <section class="card" id="relicComparison">
+    <div class="card-heading">
+      <div class="number">04</div>
+      <div>
+        <h2>Relic Comparison</h2>
+        <div class="card-desc">Compare two saved DMG relics at the same level, including their Level 1 rolls</div>
+      </div>
+    </div>
+    <p class="note" style="margin-top:0">Use “Add current relic to comparison” in the DMG Perfection Calculator. The saved values are snapshots, so later edits in Perfection will not change them.</p>
+    <div class="compare-slots" id="comparisonSlots">
+      <div class="compare-empty"><strong>Relic A</strong><br>Waiting for the first saved relic.</div>
+      <div class="compare-empty"><strong>Relic B</strong><br>Waiting for the second saved relic.</div>
+    </div>
+    <div class="compare-controls fields">
+      <div class="field">
+        <label for="comparisonTargetLevel">Compare both relics at Level</label>
+        <input id="comparisonTargetLevel" type="number" min="1" max="100000" step="1" value="100">
+      </div>
+    </div>
+    <div class="compare-empty-state" id="comparisonEmptyState">Save two valid DMG relics to unlock the damage charts and mode-by-mode winner comparison.</div>
+    <div id="comparisonResults" hidden>
+      <h3 class="mode-heading">Damage progression</h3>
+      <div class="tabs compare-chart-tabs" role="tablist" aria-label="Damage comparison mode">
+        <button class="tab-button active" type="button" data-compare-chart="dmg">Initial DMG</button>
+        <button class="tab-button" type="button" data-compare-chart="raid">Raid</button>
+        <button class="tab-button" type="button" data-compare-chart="endless">Endless</button>
+        <button class="tab-button" type="button" data-compare-chart="challenge">Challenge</button>
+      </div>
+      <div class="compare-chart-wrap" id="relicCompareChart"></div>
+      <div class="chart-legend">
+        <span><i class="legend-dot" style="background:#70b8f5"></i> Relic A</span>
+        <span><i class="legend-dot" style="background:#bd83df"></i> Relic B</span>
+        <span><i class="legend-dot" style="background:#d6b96c"></i> Selected level</span>
+      </div>
+      <h3 class="mode-heading">Best relic for each mode</h3>
+      <div class="compare-winner-grid" id="compareWinners"></div>
+      <p class="note">All comparisons use the same target level. Level 1 values are recovered with: current status − (saved relic level − 1). The chart then projects both relics from Level 1 to the selected level. A mode is marked unavailable when a relic does not have that mode's status.</p>
     </div>
   </section>
 
@@ -888,6 +968,176 @@ footer {
       $("simFinalValue").textContent = m === null ? "Need HP + Endless HP" : baseRaw !== "" && Number.isFinite(base) && base > 0 ? fmt(base*m) : `${perfFmt(m)}× (enter Base HP)`;
     }
   }
+
+  // Two-slot DMG relic comparison. Saved current stats are normalized back to Level 1,
+  // then both relics are projected to a shared level before damage is compared.
+  const savedCompareRelics = [null, null];
+  let activeCompareChart = "dmg";
+  const compareStatSpecs = {
+    dmg:{label:"DMG",id:"dmgBase",max:10},
+    raid:{label:"Raid",id:"dmgRaid",max:10},
+    endless:{label:"Endless",id:"dmgEndless",max:35},
+    challenge:{label:"Challenge",id:"dmgChallenge",max:35}
+  };
+  function captureCurrentDmgRelic() {
+    const levelRaw = $("dmgLevel").value.trim();
+    const level = Number(levelRaw);
+    if (!levelRaw || !Number.isSafeInteger(level) || level < 1 || level > 100000) {
+      return {error:"Enter a valid DMG relic level first."};
+    }
+    const current = {};
+    const level1 = {};
+    let entered = 0;
+    for (const [key, spec] of Object.entries(compareStatSpecs)) {
+      const raw = $(spec.id).value.trim();
+      if (!raw) { current[key] = null; level1[key] = null; continue; }
+      const value = Number(raw);
+      if (!Number.isFinite(value) || value < 1) return {error:`Check the ${spec.label} value.`};
+      const normalized = Math.round((value - (level - 1)) * 10) / 10;
+      if (normalized < 1 || normalized > spec.max) {
+        return {error:`${spec.label} is invalid for Level ${level}. Its recovered Level 1 value must be between 1 and ${spec.max}.`};
+      }
+      current[key] = value;
+      level1[key] = normalized;
+      entered++;
+    }
+    if (current.dmg === null) return {error:"DMG is required to compare a relic."};
+    if (entered < 2 || entered > 3) return {error:"A DMG relic must have DMG plus 1 or 2 additional statuses."};
+    return {level, current, level1};
+  }
+  function addCurrentDmgRelicToComparison() {
+    const target = savedCompareRelics.findIndex(item => item === null);
+    if (target === -1) {
+      $("compareSaveFeedback").textContent = "Both slots are full. Remove a relic below before adding another.";
+      return;
+    }
+    const captured = captureCurrentDmgRelic();
+    if (captured.error) {
+      $("compareSaveFeedback").textContent = captured.error;
+      return;
+    }
+    savedCompareRelics[target] = {...captured, name:target === 0 ? "Relic A" : "Relic B"};
+    $("compareSaveFeedback").textContent = `${savedCompareRelics[target].name} saved from the current Perfection values.`;
+    renderRelicComparison();
+  }
+  function projectedCompareStat(relic, key, level) {
+    const initial = relic?.level1?.[key];
+    if (initial === null || initial === undefined) return null;
+    return Math.round((initial + level - 1) * 10) / 10;
+  }
+  function compareDamageBonus(relic, mode, level) {
+    const dmg = projectedCompareStat(relic,"dmg",level);
+    if (dmg === null) return null;
+    if (mode === "dmg") return dmg;
+    const modeValue = projectedCompareStat(relic,mode,level);
+    if (modeValue === null) return null;
+    return ((1 + dmg/100) * (1 + modeValue/100) - 1) * 100;
+  }
+  function compareNumber(value) {
+    return value === null || value === undefined || !Number.isFinite(value) ? "Unavailable" : `${perfFmt(1 + value/100)}× (+${perfFmt(value)}%)`;
+  }
+  function comparisonWinner(a,b) {
+    if (a === null && b === null) return {label:"Unavailable",cls:""};
+    if (a !== null && b === null) return {label:"Relic A (only relic with this stat)",cls:"winner"};
+    if (a === null && b !== null) return {label:"Relic B (only relic with this stat)",cls:"winner"};
+    const delta = a - b;
+    if (Math.abs(delta) < 0.000001) return {label:"Tie",cls:"tie"};
+    return delta > 0 ? {label:"Relic A",cls:"winner"} : {label:"Relic B",cls:"winner"};
+  }
+  function renderComparisonSlots() {
+    $("comparisonSlots").innerHTML = savedCompareRelics.map((relic,index) => {
+      if (!relic) return `<div class="compare-empty"><strong>Relic ${index === 0 ? "A" : "B"}</strong><br>Waiting for a saved relic.</div>`;
+      const stats = Object.entries(compareStatSpecs).map(([key,spec]) => `<span>${spec.label}: <strong>${relic.level1[key] === null ? "—" : perfFmt(relic.level1[key])}%</strong></span>`).join("");
+      return `<div class="compare-slot"><h3>Relic ${index === 0 ? "A" : "B"}</h3><div class="compare-slot-level">Saved at Level ${relic.level} · Level 1 rolls recovered</div><div class="compare-slot-stats">${stats}</div><div class="compare-slot-footer"><span style="color:#777;font-size:10px">Snapshot saved</span><button type="button" class="compare-remove" data-remove-compare="${index}">Remove</button></div></div>`;
+    }).join("");
+    $("comparisonSlots").querySelectorAll("[data-remove-compare]").forEach(button => button.addEventListener("click",() => {
+      const index = Number(button.dataset.removeCompare);
+      savedCompareRelics[index] = null;
+      $("compareSaveFeedback").textContent = `Relic ${index === 0 ? "A" : "B"} removed.`;
+      renderRelicComparison();
+    }));
+  }
+  function comparisonSamples(targetLevel) {
+    const count = Math.min(41, Math.max(2, targetLevel));
+    const values = [];
+    for (let i=0;i<count;i++) {
+      const level = count === 1 ? 1 : Math.round(1 + (targetLevel - 1) * i / (count - 1));
+      if (values[values.length-1] !== level) values.push(level);
+    }
+    if (values[values.length-1] !== targetLevel) values.push(targetLevel);
+    return values;
+  }
+  function renderComparisonChart(mode,targetLevel) {
+    const A=savedCompareRelics[0], B=savedCompareRelics[1];
+    const spec=compareStatSpecs[mode];
+    const title=mode === "dmg" ? "Base DMG bonus" : `${spec.label} total damage bonus`;
+    const levels=comparisonSamples(targetLevel);
+    const series=[{relic:A,color:"#70b8f5",label:"Relic A"},{relic:B,color:"#bd83df",label:"Relic B"}].map(item=>({
+      ...item, points:levels.map(level=>({level,value:compareDamageBonus(item.relic,mode,level)}))
+    }));
+    const values=series.flatMap(item=>item.points.map(point=>point.value).filter(value=>value!==null));
+    if (!values.length) {
+      $("relicCompareChart").innerHTML='<div class="compare-empty-state">No comparable damage data for this mode.</div>';
+      return;
+    }
+    const maxValue=Math.max(1,...values)*1.12;
+    const width=760,height=292,left=66,right=22,top=30,bottom=48,plotW=width-left-right,plotH=height-top-bottom;
+    const x=i=>left+(levels.length<=1?plotW/2:i/(levels.length-1)*plotW);
+    const y=v=>top+plotH-(v/maxValue)*plotH;
+    let grid="";
+    for(let i=0;i<=4;i++){
+      const val=maxValue*(4-i)/4, yy=y(val);
+      grid+=`<line x1="${left}" y1="${yy}" x2="${width-right}" y2="${yy}" stroke="#88888830"/><text x="${left-9}" y="${yy+4}" fill="#888" font-size="10" text-anchor="end">${Math.round(val)}%</text>`;
+    }
+    const targetX=x(levels.length-1);
+    const paths=series.map(item=>{
+      const points=item.points.map((point,i)=>point.value===null?null:`${i?'L':'M'} ${x(i)} ${y(point.value)}`).filter(Boolean);
+      const line=points.length?`<path d="${points.join(" ")}" fill="none" stroke="${item.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`:"";
+      const last=item.points[item.points.length-1];
+      const dot=last && last.value!==null?`<circle cx="${targetX}" cy="${y(last.value)}" r="5" fill="${item.color}" stroke="#111" stroke-width="1.5"><title>${item.label} at Level ${targetLevel}: ${perfFmt(last.value)}%</title></circle>`:"";
+      return line+dot;
+    }).join("");
+    const xLabels=[1,Math.max(1,Math.round(targetLevel/2)),targetLevel].filter((v,i,a)=>a.indexOf(v)===i);
+    const labels=xLabels.map(level=>{
+      const position=targetLevel<=1?plotW/2:(level-1)/(targetLevel-1)*plotW;
+      return `<text x="${left+position}" y="${height-17}" fill="${level===targetLevel?'#d6b96c':'#999'}" font-size="11" text-anchor="middle">Lv ${level}</text>`;
+    }).join("");
+    const aNow=compareDamageBonus(A,mode,targetLevel),bNow=compareDamageBonus(B,mode,targetLevel);
+    const winner=comparisonWinner(aNow,bNow);
+    $("relicCompareChart").innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${title} from Level 1 to Level ${targetLevel}"><text x="${left}" y="17" fill="#d6b96c" font-size="12" font-weight="700">${title} · shared level scale</text>${grid}<line x1="${targetX}" y1="${top}" x2="${targetX}" y2="${height-bottom}" stroke="#d6b96c" stroke-dasharray="5 5" opacity=".8"/>${paths}${labels}<text x="${width-right}" y="${height-2}" fill="#888" font-size="10" text-anchor="end">Level</text></svg><div class="chart-summary"><span>At Level ${targetLevel}: <b>${winner.label}</b></span><span>Relic A: <b>${compareNumber(aNow)}</b></span><span>Relic B: <b>${compareNumber(bNow)}</b></span></div>`;
+  }
+  function renderComparisonWinners(targetLevel) {
+    const A=savedCompareRelics[0],B=savedCompareRelics[1];
+    const modes=[{key:"dmg",label:"Initial / Base DMG"},{key:"raid",label:"Raid Damage"},{key:"endless",label:"Endless Damage"},{key:"challenge",label:"Challenge Damage"}];
+    $("compareWinners").innerHTML=modes.map(mode=>{
+      const a1=compareDamageBonus(A,mode.key,1),b1=compareDamageBonus(B,mode.key,1);
+      const aN=compareDamageBonus(A,mode.key,targetLevel),bN=compareDamageBonus(B,mode.key,targetLevel);
+      const w1=comparisonWinner(a1,b1),wN=comparisonWinner(aN,bN);
+      return `<div class="compare-winner"><h4>${mode.label}</h4><p>Level 1 — A: <strong>${compareNumber(a1)}</strong> · B: <strong>${compareNumber(b1)}</strong></p><p>Level ${targetLevel} — A: <strong>${compareNumber(aN)}</strong> · B: <strong>${compareNumber(bN)}</strong></p><p>Best at Level 1: <span class="${w1.cls}">${w1.label}</span></p><p>Best at Level ${targetLevel}: <span class="${wN.cls}">${wN.label}</span></p></div>`;
+    }).join("");
+  }
+  function renderRelicComparison() {
+    renderComparisonSlots();
+    const ready=savedCompareRelics.every(Boolean);
+    $("comparisonResults").hidden=!ready;
+    $("comparisonEmptyState").hidden=ready;
+    const saveButton=$("saveDmgRelic");
+    saveButton.disabled=savedCompareRelics.every(Boolean);
+    saveButton.textContent=saveButton.disabled?"Comparison full — remove a relic to replace":"＋ Add current relic to comparison";
+    if(!ready) return;
+    const target=validInt("comparisonTargetLevel",1,100000);
+    if(target===null){$("relicCompareChart").innerHTML='<div class="compare-empty-state">Enter a valid comparison level (1–100,000).</div>';$("compareWinners").innerHTML="";return;}
+    renderComparisonChart(activeCompareChart,target);
+    renderComparisonWinners(target);
+  }
+  $("saveDmgRelic").addEventListener("click",addCurrentDmgRelicToComparison);
+  $("comparisonTargetLevel").addEventListener("input",renderRelicComparison);
+  document.querySelectorAll("#relicComparison [data-compare-chart]").forEach(button=>button.addEventListener("click",()=>{
+    activeCompareChart=button.dataset.compareChart;
+    document.querySelectorAll("#relicComparison [data-compare-chart]").forEach(b=>b.classList.toggle("active",b===button));
+    renderRelicComparison();
+  }));
+  renderRelicComparison();
 
   function updateAll() { updateDMG(); updateHP(); }
   document.querySelectorAll(".mode-tabs [data-mode]").forEach(button => button.addEventListener("click", () => {
