@@ -334,6 +334,81 @@ footer {
   .theme-toggle { position:static; display:block; margin:0 0 14px auto; }
 }
 
+
+/* ===== Animated silver waves background (dark theme) ===== */
+body {
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+}
+
+/* Soft, drifting pools of silver light */
+body::before {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  inset: -35%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 38% 24% at 12% 42%, rgba(190,190,190,.19), transparent 72%),
+    radial-gradient(ellipse 34% 22% at 82% 28%, rgba(150,150,150,.15), transparent 74%),
+    radial-gradient(ellipse 42% 25% at 70% 82%, rgba(210,210,210,.13), transparent 72%),
+    radial-gradient(ellipse 35% 20% at 28% 78%, rgba(125,125,125,.13), transparent 75%);
+  filter: blur(48px);
+  animation: relicWaveDrift 18s ease-in-out infinite alternate;
+}
+
+/* A wide, faint band of light slowly sweeps across the page */
+body::after {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  inset: -20%;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg,
+      transparent 25%,
+      rgba(210,210,210,.055) 39%,
+      rgba(255,255,255,.11) 45%,
+      rgba(160,160,160,.045) 51%,
+      transparent 66%);
+  background-size: 220% 220%;
+  filter: blur(34px);
+  animation: relicWaveSweep 13s ease-in-out infinite;
+  opacity: .9;
+}
+
+@keyframes relicWaveDrift {
+  0%   { transform: translate3d(-5%, -2%, 0) scale(1) rotate(-4deg); }
+  50%  { transform: translate3d(3%, 3%, 0) scale(1.08) rotate(2deg); }
+  100% { transform: translate3d(6%, -2%, 0) scale(1.02) rotate(6deg); }
+}
+
+@keyframes relicWaveSweep {
+  0%   { background-position: 100% 50%; transform: translateX(-5%) rotate(-8deg); }
+  50%  { background-position: 0% 50%; transform: translateX(5%) rotate(0deg); }
+  100% { background-position: 100% 50%; transform: translateX(-5%) rotate(8deg); }
+}
+
+/* Keep all calculator content above the animated background */
+.container {
+  position: relative;
+  z-index: 1;
+}
+
+/* The light theme stays clean and static */
+:root[data-theme="light"] body::before,
+:root[data-theme="light"] body::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none;
+  }
+}
+
 </style>
 </head>
 <body>
